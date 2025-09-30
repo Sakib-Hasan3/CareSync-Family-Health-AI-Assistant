@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "623777701983",
+    "project_id": "caresync-app-955fa",
+    "storage_bucket": "caresync-app-955fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623777701983:android:786f4ef929288067f37bea",
+        "android_client_info": {
+          "package_name": "com.example.caresync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs5x9rBsrcZmPEvQWrj7zEKjd2D9W2XSY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
