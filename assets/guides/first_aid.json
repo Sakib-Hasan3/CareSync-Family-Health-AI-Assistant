@@ -1,0 +1,33 @@
+{
+  "title": "First Aid Quick Guide",
+  "items": [
+    {
+      "topic": "CPR (Adults)",
+      "steps": [
+        "Call emergency services first.",
+        "Begin chest compressions: 100–120/min, depth ~2 inches.",
+        "Allow full recoil; minimize interruptions.",
+        "Use an AED as soon as available and follow prompts."
+      ],
+      "disclaimer": "Educational only. Not a substitute for certified training."
+    },
+    {
+      "topic": "Choking (Adult/Child)",
+      "steps": [
+        "Ask: 'Are you choking?' If unable to cough/speak, act.",
+        "Perform abdominal thrusts (Heimlich) until relief or unconscious.",
+        "If unconscious: call emergency services and begin CPR."
+      ],
+      "disclaimer": "For infants: use back slaps/chest thrusts, not abdominal thrusts."
+    },
+    {
+      "topic": "Severe Bleeding",
+      "steps": [
+        "Apply direct pressure with clean cloth or bandage.",
+        "Elevate if possible; do not remove soaked dressings—add layers.",
+        "Use a tourniquet for life-threatening limb bleeding if trained.",
+        "Seek emergency care immediately."
+      ]
+    }
+  ]
+}

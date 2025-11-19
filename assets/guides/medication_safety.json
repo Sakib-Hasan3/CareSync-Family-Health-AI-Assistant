@@ -1,0 +1,22 @@
+{
+  "title": "Medication Safety Basics",
+  "items": [
+    {
+      "topic": "General Tips",
+      "bullets": [
+        "Always read the label and follow dosing instructions.",
+        "Check for interactions with your current medications.",
+        "Use a pill organizer or reminders to prevent missed doses.",
+        "Do not crush/chew extended-release tablets unless instructed."
+      ]
+    },
+    {
+      "topic": "When to Seek Help",
+      "bullets": [
+        "Rash, swelling, or difficulty breathing after a dose",
+        "Severe dizziness, fainting, or chest pain",
+        "Overdose or accidental double dosing"
+      ]
+    }
+  ]
+}
