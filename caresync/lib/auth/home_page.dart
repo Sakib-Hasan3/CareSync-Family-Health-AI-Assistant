@@ -184,13 +184,10 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'See what our users say about their experience',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
         const SizedBox(height: 20),
-        
+
         // Testimonials Carousel
         SizedBox(
           height: 180,
@@ -202,7 +199,8 @@ class HomePage extends StatelessWidget {
                 name: 'Sarah M.',
                 role: 'Mother of 3',
                 rating: 5,
-                comment: 'CareSync saved me so much time managing my family\'s medications and appointments. The blood donation feature helped us find a donor during an emergency!',
+                comment:
+                    'CareSync saved me so much time managing my family\'s medications and appointments. The blood donation feature helped us find a donor during an emergency!',
                 avatarColor: Colors.blue,
               ),
               SizedBox(width: 16),
@@ -210,7 +208,8 @@ class HomePage extends StatelessWidget {
                 name: 'Dr. Raj Patel',
                 role: 'Family Physician',
                 rating: 5,
-                comment: 'As a doctor, I recommend CareSync to all my patients. The emergency profiles provide critical information when it matters most.',
+                comment:
+                    'As a doctor, I recommend CareSync to all my patients. The emergency profiles provide critical information when it matters most.',
                 avatarColor: Colors.green,
               ),
               SizedBox(width: 16),
@@ -218,7 +217,8 @@ class HomePage extends StatelessWidget {
                 name: 'The Johnson Family',
                 role: 'Users for 2 years',
                 rating: 5,
-                comment: 'From tracking our elderly parents\' health to managing our kids\' vaccination schedules - CareSync keeps our entire family healthy and organized.',
+                comment:
+                    'From tracking our elderly parents\' health to managing our kids\' vaccination schedules - CareSync keeps our entire family healthy and organized.',
                 avatarColor: Colors.purple,
               ),
               SizedBox(width: 8),
@@ -244,18 +244,9 @@ class HomePage extends StatelessWidget {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _StatItem(
-                value: '10K+',
-                label: 'Families\nConnected',
-              ),
-              _StatItem(
-                value: '50K+',
-                label: 'Medications\nManaged',
-              ),
-              _StatItem(
-                value: '1K+',
-                label: 'Lives Saved\nvia Blood Donation',
-              ),
+              _StatItem(value: '10K+', label: 'Families\nConnected'),
+              _StatItem(value: '50K+', label: 'Medications\nManaged'),
+              _StatItem(value: '1K+', label: 'Lives Saved\nvia Blood Donation'),
             ],
           ),
         ),
@@ -281,10 +272,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Comprehensive health management tools for your family',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
         const SizedBox(height: 20),
         Row(
@@ -518,31 +506,39 @@ class _TestimonialCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Stars
           Row(
-            children: List.generate(5, (index) => Icon(
-              Icons.star,
-              size: 16,
-              color: index < rating ? const Color(0xFFFFD700) : Colors.grey.shade300,
-            )),
+            children: List.generate(
+              5,
+              (index) => Icon(
+                Icons.star,
+                size: 16,
+                color: index < rating
+                    ? const Color(0xFFFFD700)
+                    : Colors.grey.shade300,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
-          
+
           // Comment
-          Text(
-            comment,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-              height: 1.5,
+          Flexible(
+            child: Text(
+              comment,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.5,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 16),
-          
+
           // User Info
           Row(
             children: [
@@ -553,11 +549,7 @@ class _TestimonialCard extends StatelessWidget {
                   color: avatarColor.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.person,
-                  color: avatarColor,
-                  size: 20,
-                ),
+                child: Icon(Icons.person, color: avatarColor, size: 20),
               ),
               const SizedBox(width: 12),
               Column(
@@ -572,10 +564,7 @@ class _TestimonialCard extends StatelessWidget {
                   ),
                   Text(
                     role,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -591,10 +580,7 @@ class _StatItem extends StatelessWidget {
   final String value;
   final String label;
 
-  const _StatItem({
-    required this.value,
-    required this.label,
-  });
+  const _StatItem({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {

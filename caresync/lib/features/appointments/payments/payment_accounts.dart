@@ -11,7 +11,8 @@ class PaymentAccounts {
         receiver: 'CareSync Clinic',
         type: 'Personal',
         uri: 'bkash://payment/?number=017XXXXXXXX',
-        instructions: 'Send money to this bKash number and include Appointment ID in reference',
+        instructions:
+            'Send money to this bKash number and include Appointment ID in reference',
       ),
       PaymentAccount(
         number: '019XXXXXXXX',
@@ -27,7 +28,8 @@ class PaymentAccounts {
         receiver: 'CareSync Clinic',
         type: 'Personal',
         uri: 'nagad://payment/?number=018YYYYYYYY',
-        instructions: 'Send money to this Nagad number and include Appointment ID in reference',
+        instructions:
+            'Send money to this Nagad number and include Appointment ID in reference',
       ),
     ],
     'Rocket': [
@@ -79,28 +81,27 @@ class PaymentAccounts {
   static List<String> get supportedMethods => _accounts.keys.toList();
 
   /// Get account number for a method (primary account)
-  static String accountNumberFor(String method) => 
+  static String accountNumberFor(String method) =>
       primaryAccountFor(method).number;
 
   /// Get receiver name for a method (primary account)
-  static String receiverFor(String method) => 
+  static String receiverFor(String method) =>
       primaryAccountFor(method).receiver;
 
   /// Get deep link URI for a method (primary account)
-  static String uriFor(String method) => 
-      primaryAccountFor(method).uri;
+  static String uriFor(String method) => primaryAccountFor(method).uri;
 
   /// Get payment instructions for a method
-  static String instructionsFor(String method) => 
+  static String instructionsFor(String method) =>
       primaryAccountFor(method).instructions;
 
   /// Validate if an account number is properly configured (not placeholder)
   static bool isAccountConfigured(String method) {
     final account = primaryAccountFor(method);
-    return !account.number.contains('X') && 
-           !account.number.contains('Y') && 
-           !account.number.contains('Z') &&
-           account.number != 'Not Configured';
+    return !account.number.contains('X') &&
+        !account.number.contains('Y') &&
+        !account.number.contains('Z') &&
+        account.number != 'Not Configured';
   }
 
   /// Get formatted account info for display
@@ -111,7 +112,9 @@ class PaymentAccounts {
 
   /// Get payment methods that are properly configured
   static List<String> get configuredMethods {
-    return _accounts.keys.where((method) => isAccountConfigured(method)).toList();
+    return _accounts.keys
+        .where((method) => isAccountConfigured(method))
+        .toList();
   }
 
   /// Get payment method display names with icons

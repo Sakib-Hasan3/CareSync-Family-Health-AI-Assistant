@@ -43,4 +43,5 @@ class Iconsax {
   static const IconData weight = Icons.fitness_center;
   static const IconData clock_1 = Icons.access_time;
   static const IconData box = Icons.inventory;
+  static const IconData call_calling = Icons.phone;
 }

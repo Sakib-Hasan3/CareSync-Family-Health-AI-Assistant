@@ -35,18 +35,19 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
         notes: _donor.notes,
       );
     });
-    
+
     await _repo.init();
     await _repo.addOrUpdate(_donor);
-    
+
     if (!mounted) return;
-    
+
     // Show confirmation
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_donor.available ? 
-          'Marked as available for donation' : 
-          'Marked as unavailable'
+        content: Text(
+          _donor.available
+              ? 'Marked as available for donation'
+              : 'Marked as unavailable',
         ),
         backgroundColor: _donor.available ? Colors.green : Colors.orange,
         behavior: SnackBarBehavior.floating,
@@ -56,11 +57,8 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
   }
 
   Future<void> _contactDonor() async {
-    final Uri telLaunchUri = Uri(
-      scheme: 'tel',
-      path: _donor.phone,
-    );
-    
+    final Uri telLaunchUri = Uri(scheme: 'tel', path: _donor.phone);
+
     if (await canLaunchUrl(telLaunchUri)) {
       await launchUrl(telLaunchUri);
     } else {
@@ -78,9 +76,12 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
     final Uri smsLaunchUri = Uri(
       scheme: 'sms',
       path: _donor.phone,
-      queryParameters: {'body': 'Hello ${_donor.name}, I need blood donation assistance. Are you available?'},
+      queryParameters: {
+        'body':
+            'Hello ${_donor.name}, I need blood donation assistance. Are you available?',
+      },
     );
-    
+
     if (await canLaunchUrl(smsLaunchUri)) {
       await launchUrl(smsLaunchUri);
     } else {
@@ -99,7 +100,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
       context: context,
       builder: (c) => AlertDialog(
         title: const Text('Remove Donor'),
-        content: const Text('Are you sure you want to remove this donor from the registry?'),
+        content: const Text(
+          'Are you sure you want to remove this donor from the registry?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
@@ -107,24 +110,21 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text(
-              'Remove',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
-    
+
     if (ok != true) return;
-    
+
     await _repo.init();
     await _repo.remove(_donor.id);
-    
+
     if (!mounted) return;
-    
+
     Navigator.pop(context);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Donor removed successfully'),
@@ -133,7 +133,12 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -156,10 +161,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -183,7 +185,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _donor.available ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+        color: _donor.available
+            ? Colors.green.withOpacity(0.1)
+            : Colors.orange.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: _donor.available ? Colors.green : Colors.orange,
@@ -200,7 +204,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
           ),
           const SizedBox(width: 6),
           Text(
-            _donor.available ? 'Available for Donation' : 'Currently Unavailable',
+            _donor.available
+                ? 'Available for Donation'
+                : 'Currently Unavailable',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -219,10 +225,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
       appBar: AppBar(
         title: const Text(
           'Donor Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFFDC143C),
@@ -242,7 +245,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
             // Header Card
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -257,7 +262,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: _getBloodGroupColor(_donor.bloodGroup).withOpacity(0.3),
+                                color: _getBloodGroupColor(
+                                  _donor.bloodGroup,
+                                ).withOpacity(0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -313,7 +320,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Contact Buttons
                     Row(
                       children: [
@@ -354,7 +361,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 20),
 
             // Information Section
@@ -399,7 +406,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                 ),
                 _buildInfoCard(
                   'Last Donation',
-                  _donor.lastDonated != null 
+                  _donor.lastDonated != null
                       ? DateFormat('MMM dd, yyyy').format(_donor.lastDonated!)
                       : 'Never',
                   Icons.calendar_today_rounded,
@@ -418,7 +425,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
             // Management Actions
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -439,14 +448,24 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                           child: OutlinedButton.icon(
                             onPressed: _toggleAvailability,
                             icon: Icon(
-                              _donor.available ? Icons.person_off_rounded : Icons.person_rounded,
+                              _donor.available
+                                  ? Icons.person_off_rounded
+                                  : Icons.person_rounded,
                               size: 18,
                             ),
-                            label: Text(_donor.available ? 'Mark Unavailable' : 'Mark Available'),
+                            label: Text(
+                              _donor.available
+                                  ? 'Mark Unavailable'
+                                  : 'Mark Available',
+                            ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: _donor.available ? Colors.orange : Colors.green,
+                              foregroundColor: _donor.available
+                                  ? Colors.orange
+                                  : Colors.green,
                               side: BorderSide(
-                                color: _donor.available ? Colors.orange : Colors.green,
+                                color: _donor.available
+                                    ? Colors.orange
+                                    : Colors.green,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
@@ -480,9 +499,10 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
   }
 
   Widget _buildEligibilityCard() {
-    final bool isEligible = _donor.lastDonated == null || 
+    final bool isEligible =
+        _donor.lastDonated == null ||
         DateTime.now().difference(_donor.lastDonated!).inDays >= 90;
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -493,7 +513,9 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isEligible ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                color: isEligible
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -519,10 +541,7 @@ class _DonorDetailPageState extends State<DonorDetailPage> {
                     _donor.lastDonated != null
                         ? 'Last donated ${DateFormat('MMM dd, yyyy').format(_donor.lastDonated!)}'
                         : 'First-time donor',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),

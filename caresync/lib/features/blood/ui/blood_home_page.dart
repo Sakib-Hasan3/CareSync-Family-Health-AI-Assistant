@@ -38,10 +38,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
       appBar: AppBar(
         title: const Text(
           'Blood Donation',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFFDC143C),
@@ -96,10 +93,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
           const SizedBox(height: 16),
           Text(
             'Loading blood donation data...',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
         ],
       ),
@@ -159,10 +153,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
           const SizedBox(height: 16),
           const Text(
             'Join our community of life-savers. Every donation matters.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),
@@ -251,11 +242,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20,
-                ),
+                child: Icon(icon, color: color, size: 20),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,10 +258,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -356,11 +340,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
             color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(height: 8),
         Text(
@@ -373,10 +353,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
       ],
@@ -423,11 +400,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.people_outline,
-                  size: 48,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
                 const SizedBox(height: 12),
                 const Text(
                   'No Donors Yet',
@@ -440,10 +413,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
                 const SizedBox(height: 8),
                 Text(
                   'Be the first to register as a blood donor',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -489,10 +459,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
         ),
         subtitle: Text(
           '${donor.city} • ${donor.phone}',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 12),
         ),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -530,10 +497,7 @@ class _BloodHomePageState extends State<BloodHomePage> {
   }
 
   void _navigateToPage(Widget page) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    ).then((_) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page)).then((_) {
       if (!mounted) return;
       _load();
     });

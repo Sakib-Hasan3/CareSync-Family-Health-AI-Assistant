@@ -50,13 +50,29 @@ class _DonorListPageState extends State<DonorListPage> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: _getBloodGroupColor(d.bloodGroup),
-                      child: Text(d.bloodGroup, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        d.bloodGroup,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     title: Text(d.name),
                     subtitle: Text('${d.city} • ${d.phone}'),
-                    trailing: Text(d.available ? 'Available' : 'Unavailable', style: TextStyle(color: d.available ? Colors.green : Colors.grey)),
+                    trailing: Text(
+                      d.available ? 'Available' : 'Unavailable',
+                      style: TextStyle(
+                        color: d.available ? Colors.green : Colors.grey,
+                      ),
+                    ),
                     onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => DonorDetailPage(donor: d)));
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DonorDetailPage(donor: d),
+                        ),
+                      );
                       if (!mounted) return;
                       _load();
                     },

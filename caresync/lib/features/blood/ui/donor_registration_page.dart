@@ -32,18 +32,22 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
     
-    // Validate last donated is at least 90 days ago
     if (_lastDonated != null) {
       final cutoff = DateTime.now().subtract(const Duration(days: 90));
       if (_lastDonated!.isAfter(cutoff)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Last donation must be at least 90 days ago.'),
+              content: const Text(
+                'Last donation must be at least 90 days ago.',
+              ),
               backgroundColor: Colors.orange[800],
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           );
         }
@@ -112,10 +116,7 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               Text(
                 'You\'ve joined our life-saving community',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 20),
               Container(
@@ -129,7 +130,10 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
                     _buildDonorDetailRow('Name', donor.name),
                     _buildDonorDetailRow('Blood Group', donor.bloodGroup),
                     _buildDonorDetailRow('City', donor.city),
-                    _buildDonorDetailRow('Status', donor.available ? 'Available' : 'Unavailable'),
+                    _buildDonorDetailRow(
+                      'Status',
+                      donor.available ? 'Available' : 'Unavailable',
+                    ),
                   ],
                 ),
               ),
@@ -203,10 +207,7 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
       appBar: AppBar(
         title: const Text(
           'Become a Donor',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFFDC143C),
@@ -283,10 +284,7 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
                 SizedBox(height: 4),
                 Text(
                   'Your donation can save up to 3 lives. Join our community of heroes.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -326,10 +324,7 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
             const SizedBox(height: 4),
             Text(
               'Please provide accurate information',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
 
@@ -339,7 +334,9 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               label: 'Full Name',
               hintText: 'Enter your full name',
               icon: Icons.person_outline_rounded,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Please enter your name'
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -354,7 +351,9 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               hintText: 'Enter your phone number',
               icon: Icons.phone_rounded,
               keyboardType: TextInputType.phone,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your phone number' : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Please enter your phone number'
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -364,7 +363,9 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               label: 'City',
               hintText: 'Enter your city',
               icon: Icons.location_city_rounded,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your city' : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Please enter your city'
+                  : null,
             ),
             const SizedBox(height: 20),
 
@@ -460,7 +461,10 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFDC143C)),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           validator: validator,
         ),
@@ -490,36 +494,35 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
           child: DropdownButtonFormField<String>(
             value: _bloodGroup,
             items: ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-']
-                .map((b) => DropdownMenuItem(
-                      value: b,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: _getBloodGroupColor(b),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                b,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                .map(
+                  (b) => DropdownMenuItem(
+                    value: b,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: _getBloodGroupColor(b),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              b,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            b,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ))
+                        ),
+                        const SizedBox(width: 12),
+                        Text(b, style: const TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _bloodGroup = v ?? _bloodGroup),
             decoration: const InputDecoration(
@@ -538,16 +541,22 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _available ? Colors.green.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+        color: _available
+            ? Colors.green.withOpacity(0.05)
+            : Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _available ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+          color: _available
+              ? Colors.green.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.2),
         ),
       ),
       child: Row(
         children: [
           Icon(
-            _available ? Icons.check_circle_rounded : Icons.remove_circle_rounded,
+            _available
+                ? Icons.check_circle_rounded
+                : Icons.remove_circle_rounded,
             color: _available ? Colors.green : Colors.grey,
           ),
           const SizedBox(width: 12),
@@ -556,20 +565,19 @@ class _DonorRegistrationPageState extends State<DonorRegistrationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _available ? 'Available for Donation' : 'Currently Unavailable',
+                  _available
+                      ? 'Available for Donation'
+                      : 'Currently Unavailable',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: _available ? Colors.green : Colors.grey,
                   ),
                 ),
                 Text(
-                  _available 
+                  _available
                       ? 'You will appear in search results for patients'
                       : 'You will be hidden from search results',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),

@@ -19,6 +19,7 @@ import 'package:caresync/features/blood/ui/blood_home_page.dart';
 import 'package:caresync/features/blood/ui/donor_registration_page.dart';
 import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
+import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
 
 // Feature repositories
 // Repositories can be injected/used within feature pages; not needed here.
@@ -305,6 +306,20 @@ class _DashboardPageState extends State<DashboardPage> {
                               );
                             },
                           ),
+                          _QuickActionGridItem(
+                            icon: Iconsax.call_calling,
+                            label: 'Emergency Helplines',
+                            color: const Color(0xFFDC143C),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const EmergencyContactsPage(),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -491,6 +506,10 @@ class _DashboardHomeState extends State<DashboardHome> {
 
               // Emergency Quick Access
               _buildEmergencyQuickAccess(),
+              const SizedBox(height: 24),
+
+              // Emergency Contacts Quick Access
+              _buildEmergencyContactsCard(),
               const SizedBox(height: 24),
 
               // Health Overview Cards
@@ -749,6 +768,83 @@ class _DashboardHomeState extends State<DashboardHome> {
               ),
             ),
             const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmergencyContactsCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EmergencyContactsPage()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFDC143C), Color(0xFFFF6B6B)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(blurRadius: 12, color: Colors.red.withOpacity(0.3)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.emergency_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Emergency Helplines',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Ambulance, hospitals, police & more',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.phone_enabled,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
           ],
         ),
       ),
