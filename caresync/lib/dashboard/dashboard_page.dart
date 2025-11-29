@@ -480,6 +480,44 @@ class _DashboardHomeState extends State<DashboardHome> {
     });
   }
 
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: Color(0xFFEF4444)),
+            SizedBox(width: 12),
+            Text('Logout'),
+          ],
+        ),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -731,6 +769,13 @@ class _DashboardHomeState extends State<DashboardHome> {
               onPressed: () {
                 // Handle notifications
               },
+            ),
+            const SizedBox(width: 8),
+            // Logout Button
+            _HeaderIconButton(
+              icon: Iconsax.logout_1,
+              color: const Color(0xFFEF4444),
+              onPressed: _handleLogout,
             ),
           ],
         ),

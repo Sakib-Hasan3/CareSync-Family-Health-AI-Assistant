@@ -44,4 +44,5 @@ class Iconsax {
   static const IconData clock_1 = Icons.access_time;
   static const IconData box = Icons.inventory;
   static const IconData call_calling = Icons.phone;
+  static const IconData logout_1 = Icons.logout;
 }
