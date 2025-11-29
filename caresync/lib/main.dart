@@ -11,6 +11,7 @@ import 'features/directory/browse_and_book.dart';
 import 'features/directory/admin_page.dart';
 import 'package:caresync/features/medical_records/medical_records_page.dart';
 import 'package:caresync/features/appointments/appointment_page.dart';
+import 'package:caresync/shared/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ Future<void> main() async {
 
   // Initialize Hive for local storage used by medications/appointments
   await Hive.initFlutter();
+  
+  // Initialize notification service for medication and appointment alarms
+  await NotificationService().initialize();
 
   runApp(const CareSyncApp());
 }

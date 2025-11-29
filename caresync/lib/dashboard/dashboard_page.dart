@@ -20,6 +20,7 @@ import 'package:caresync/features/blood/ui/donor_registration_page.dart';
 import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
+import 'package:caresync/features/notifications/notification_settings_page.dart';
 
 // Feature repositories
 // Repositories can be injected/used within feature pages; not needed here.
@@ -316,6 +317,20 @@ class _DashboardPageState extends State<DashboardPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const EmergencyContactsPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionGridItem(
+                            icon: Iconsax.notification,
+                            label: 'Alarm Settings',
+                            color: const Color(0xFFF59E0B),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const NotificationSettingsPage(),
                                 ),
                               );
                             },
