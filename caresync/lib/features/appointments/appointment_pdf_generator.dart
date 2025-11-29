@@ -82,7 +82,7 @@ class AppointmentPdfGenerator {
           pw.SizedBox(height: 12),
           _buildDetailRow('Appointment ID', appointment.id),
           _buildDetailRow('Department', departmentName),
-          _buildDetailRow('Doctor', appointment.doctorName ?? ''),
+          _buildDetailRow('Doctor', appointment.doctorName),
           _buildDetailRow('Date', _formatDate(appointment.dateTime)),
           _buildDetailRow('Time', _formatTime(appointment.dateTime)),
           if (appointment.notes != null && appointment.notes!.isNotEmpty)

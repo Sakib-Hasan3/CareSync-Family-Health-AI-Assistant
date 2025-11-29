@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:typed_data';
 import 'payment_account_page.dart';
 import '../payments/payment_accounts.dart';
@@ -106,9 +105,6 @@ class _BookingPaymentPageState extends State<BookingPaymentPage> {
 
   String _generateTxId() =>
       'TX-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(9999)}';
-
-  // provisional reference shown prior to booking; generated once per page instance
-  final String _provisionalRef = 'REF-${DateTime.now().millisecondsSinceEpoch}';
 
   Future<void> _confirmBooking() async {
     if (_selectedTime == null) {

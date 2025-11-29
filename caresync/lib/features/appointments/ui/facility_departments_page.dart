@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/facility.dart';
-import '../models/department.dart';
 import 'doctors_list_page.dart';
 
 class FacilityDepartmentsPage extends StatelessWidget {

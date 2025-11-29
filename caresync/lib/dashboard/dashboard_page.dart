@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 // Use local Iconsax stub to avoid external dependency
 import 'package:caresync/features/health_timeline/iconsax_stub.dart';
@@ -21,6 +22,9 @@ import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
 import 'package:caresync/features/notifications/notification_settings_page.dart';
+import 'package:caresync/features/user_profile/user_profile_repository.dart';
+import 'package:caresync/features/user_profile/models/user_profile.dart';
+import 'package:caresync/features/user_profile/edit_profile_page.dart';
 
 // Feature repositories
 // Repositories can be injected/used within feature pages; not needed here.
@@ -1796,14 +1800,536 @@ class HealthRecordsPage extends StatelessWidget {
 }
 
 // Minimal Profile page placeholder for bottom navigation
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final _profileRepo = UserProfileRepository();
+  UserProfile? _profile;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _loading = true);
+    try {
+      await _profileRepo.init();
+      final profile = await _profileRepo.getCurrentUserProfile();
+      setState(() {
+        _profile = profile;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading profile: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _editProfile() async {
+    if (_profile == null) return;
+    
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(profile: _profile!),
+      ),
+    );
+
+    if (result == true) {
+      _loadProfile();
+    }
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(child: Text('Profile Page')),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: const Text(
+          'My Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _profile == null
+              ? const Center(child: Text('Failed to load profile'))
+              : RefreshIndicator(
+                  onRefresh: _loadProfile,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        _buildProfileHeader(),
+                        const SizedBox(height: 24),
+                        _buildQuickStats(),
+                        const SizedBox(height: 24),
+                        _buildPersonalInfo(),
+                        const SizedBox(height: 16),
+                        _buildHealthInfo(),
+                        const SizedBox(height: 16),
+                        _buildEmergencyContact(),
+                        const SizedBox(height: 16),
+                        _buildInsuranceInfo(),
+                        const SizedBox(height: 32),
+                        _buildEditButton(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 20,
+            color: const Color(0xFF2563EB).withOpacity(0.3),
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.white,
+                child: _profile!.photoUrl != null
+                    ? ClipOval(
+                        child: Image.network(
+                          _profile!.photoUrl!,
+                          width: 112,
+                          height: 112,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.person, size: 60, color: Color(0xFF2563EB)),
+                        ),
+                      )
+                    : const Icon(Icons.person, size: 60, color: Color(0xFF2563EB)),
+              ),
+              if (_profile!.bloodGroup != null)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Text(
+                      _profile!.bloodGroup!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _profile!.name,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.email, color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                _profile!.email,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          if (_profile!.phone != null && _profile!.phone!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.phone, color: Colors.white70, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  _profile!.phone!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Row(
+      children: [
+        if (_profile!.age != null)
+          Expanded(
+            child: _buildStatCard(
+              icon: Icons.cake,
+              label: 'Age',
+              value: '${_profile!.age} years',
+              color: const Color(0xFFF59E0B),
+            ),
+          ),
+        if (_profile!.age != null && _profile!.bmi != null) const SizedBox(width: 12),
+        if (_profile!.bmi != null)
+          Expanded(
+            child: _buildStatCard(
+              icon: Icons.monitor_weight,
+              label: 'BMI',
+              value: _profile!.bmi!.toStringAsFixed(1),
+              color: const Color(0xFF10B981),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(blurRadius: 10, color: Colors.black.withOpacity(0.05)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfo() {
+    return _buildInfoCard(
+      title: 'Personal Information',
+      icon: Icons.person,
+      children: [
+        if (_profile!.dateOfBirth != null)
+          _buildInfoRow(Icons.cake, 'Date of Birth',
+              DateFormat('MMMM dd, yyyy').format(_profile!.dateOfBirth!)),
+        if (_profile!.gender != null)
+          _buildInfoRow(Icons.wc, 'Gender', _profile!.gender!),
+        if (_profile!.bloodGroup != null)
+          _buildInfoRow(Icons.bloodtype, 'Blood Group', _profile!.bloodGroup!),
+        if (_profile!.address != null && _profile!.address!.isNotEmpty)
+          _buildInfoRow(Icons.location_on, 'Address', _profile!.address!),
+      ],
+    );
+  }
+
+  Widget _buildHealthInfo() {
+    final hasHealthInfo = (_profile!.height != null ||
+        _profile!.weight != null ||
+        (_profile!.allergies?.isNotEmpty ?? false) ||
+        (_profile!.chronicDiseases?.isNotEmpty ?? false) ||
+        (_profile!.medications?.isNotEmpty ?? false));
+
+    if (!hasHealthInfo) return const SizedBox.shrink();
+
+    return _buildInfoCard(
+      title: 'Health Information',
+      icon: Icons.favorite,
+      children: [
+        if (_profile!.height != null)
+          _buildInfoRow(Icons.height, 'Height', '${_profile!.height} cm'),
+        if (_profile!.weight != null)
+          _buildInfoRow(Icons.monitor_weight, 'Weight', '${_profile!.weight} kg'),
+        if (_profile!.allergies?.isNotEmpty ?? false)
+          _buildChipRow(Icons.warning, 'Allergies', _profile!.allergies!),
+        if (_profile!.chronicDiseases?.isNotEmpty ?? false)
+          _buildChipRow(
+              Icons.local_hospital, 'Chronic Diseases', _profile!.chronicDiseases!),
+        if (_profile!.medications?.isNotEmpty ?? false)
+          _buildChipRow(Icons.medication, 'Medications', _profile!.medications!),
+      ],
+    );
+  }
+
+  Widget _buildEmergencyContact() {
+    final hasEmergency = (_profile!.emergencyContactName != null &&
+            _profile!.emergencyContactName!.isNotEmpty) ||
+        (_profile!.emergencyContact != null && _profile!.emergencyContact!.isNotEmpty);
+
+    if (!hasEmergency) return const SizedBox.shrink();
+
+    return _buildInfoCard(
+      title: 'Emergency Contact',
+      icon: Icons.emergency,
+      children: [
+        if (_profile!.emergencyContactName != null &&
+            _profile!.emergencyContactName!.isNotEmpty)
+          _buildInfoRow(
+              Icons.person_outline, 'Name', _profile!.emergencyContactName!),
+        if (_profile!.emergencyContact != null && _profile!.emergencyContact!.isNotEmpty)
+          _buildInfoRow(Icons.phone_in_talk, 'Phone', _profile!.emergencyContact!),
+      ],
+    );
+  }
+
+  Widget _buildInsuranceInfo() {
+    final hasInsurance = (_profile!.insuranceProvider != null &&
+            _profile!.insuranceProvider!.isNotEmpty) ||
+        (_profile!.insurancePolicyNumber != null &&
+            _profile!.insurancePolicyNumber!.isNotEmpty);
+
+    if (!hasInsurance) return const SizedBox.shrink();
+
+    return _buildInfoCard(
+      title: 'Insurance Information',
+      icon: Icons.health_and_safety,
+      children: [
+        if (_profile!.insuranceProvider != null &&
+            _profile!.insuranceProvider!.isNotEmpty)
+          _buildInfoRow(
+              Icons.business, 'Provider', _profile!.insuranceProvider!),
+        if (_profile!.insurancePolicyNumber != null &&
+            _profile!.insurancePolicyNumber!.isNotEmpty)
+          _buildInfoRow(Icons.confirmation_number, 'Policy Number',
+              _profile!.insurancePolicyNumber!),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(blurRadius: 10, color: Colors.black.withOpacity(0.05)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF2563EB), size: 24),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[600]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChipRow(IconData icon, String label, List<String> items) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: Colors.grey[600]),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items
+                .map((item) => Chip(
+                      label: Text(item),
+                      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF2563EB),
+                        fontSize: 12,
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: _editProfile,
+        icon: const Icon(Icons.edit, size: 24),
+        label: const Text(
+          'Edit Profile',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
     );
   }
 }

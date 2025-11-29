@@ -144,8 +144,6 @@ class NotificationService {
           tzScheduledTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,
           payload: 'medication:$medicationId',
         );
@@ -161,8 +159,6 @@ class NotificationService {
           tzScheduledTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'medication:$medicationId',
         );
 
@@ -181,8 +177,6 @@ class NotificationService {
           reminderTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'medication_reminder:$medicationId',
         );
 
@@ -245,13 +239,11 @@ class NotificationService {
       if (oneHourBefore.isAfter(now)) {
         await _notifications.zonedSchedule(
           id,
-          '🏥 Appointment in 1 hour',
+          '🏪 Appointment in 1 hour',
           'Dr. $doctorName - $specialty',
           oneHourBefore,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'appointment:$appointmentId',
         );
         developer.log('✅ Scheduled appointment alarm 1 hour before');
@@ -268,8 +260,6 @@ class NotificationService {
           thirtyMinsBefore,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'appointment_reminder:$appointmentId',
         );
         developer.log('✅ Scheduled appointment alarm 30 mins before');
@@ -286,8 +276,6 @@ class NotificationService {
           oneDayBefore,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'appointment_day_before:$appointmentId',
         );
         developer.log('✅ Scheduled appointment alarm 1 day before');
