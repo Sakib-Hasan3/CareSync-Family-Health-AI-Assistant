@@ -33,7 +33,8 @@ class UserProfileRepository {
   Box<UserProfile> get _box {
     if (!_isInitialized) {
       throw Exception(
-          'UserProfileRepository not initialized. Call init() first.');
+        'UserProfileRepository not initialized. Call init() first.',
+      );
     }
     return Hive.box<UserProfile>(boxName);
   }

@@ -23,8 +23,9 @@ class NotificationService {
       tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
 
       // Android initialization
-      const androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
 
       // iOS initialization
       const iosSettings = DarwinInitializationSettings(
@@ -55,9 +56,10 @@ class NotificationService {
 
   Future<void> _requestPermissions() async {
     // Android 13+ permissions
-    final androidPlugin =
-        _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
@@ -65,15 +67,13 @@ class NotificationService {
     }
 
     // iOS permissions
-    final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final iosPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
 
     if (iosPlugin != null) {
-      await iosPlugin.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await iosPlugin.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
@@ -149,7 +149,8 @@ class NotificationService {
         );
 
         developer.log(
-            '✅ Scheduled DAILY medication alarm for $medicationName at ${tzScheduledTime.hour}:${tzScheduledTime.minute}');
+          '✅ Scheduled DAILY medication alarm for $medicationName at ${tzScheduledTime.hour}:${tzScheduledTime.minute}',
+        );
       } else {
         // Schedule one-time alarm
         await _notifications.zonedSchedule(
@@ -163,12 +164,14 @@ class NotificationService {
         );
 
         developer.log(
-            '✅ Scheduled ONE-TIME medication alarm for $medicationName at $tzScheduledTime');
+          '✅ Scheduled ONE-TIME medication alarm for $medicationName at $tzScheduledTime',
+        );
       }
 
       // Schedule a pre-reminder 15 minutes before
-      final reminderTime =
-          tzScheduledTime.subtract(const Duration(minutes: 15));
+      final reminderTime = tzScheduledTime.subtract(
+        const Duration(minutes: 15),
+      );
       if (reminderTime.isAfter(now)) {
         await _notifications.zonedSchedule(
           id + 10000,
@@ -234,8 +237,9 @@ class NotificationService {
       );
 
       // Alarm 1 hour before
-      final oneHourBefore =
-          tzAppointmentTime.subtract(const Duration(hours: 1));
+      final oneHourBefore = tzAppointmentTime.subtract(
+        const Duration(hours: 1),
+      );
       if (oneHourBefore.isAfter(now)) {
         await _notifications.zonedSchedule(
           id,
@@ -250,8 +254,9 @@ class NotificationService {
       }
 
       // Alarm 30 minutes before
-      final thirtyMinsBefore =
-          tzAppointmentTime.subtract(const Duration(minutes: 30));
+      final thirtyMinsBefore = tzAppointmentTime.subtract(
+        const Duration(minutes: 30),
+      );
       if (thirtyMinsBefore.isAfter(now)) {
         await _notifications.zonedSchedule(
           id + 20000,
@@ -266,8 +271,7 @@ class NotificationService {
       }
 
       // Alarm 1 day before
-      final oneDayBefore =
-          tzAppointmentTime.subtract(const Duration(days: 1));
+      final oneDayBefore = tzAppointmentTime.subtract(const Duration(days: 1));
       if (oneDayBefore.isAfter(now)) {
         await _notifications.zonedSchedule(
           id + 30000,

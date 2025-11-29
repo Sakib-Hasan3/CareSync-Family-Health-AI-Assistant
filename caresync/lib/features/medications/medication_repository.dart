@@ -39,7 +39,7 @@ class MedicationRepository {
 
   Future<void> addOrUpdate(Medication m) async {
     await _box?.put(m.id, m);
-    
+
     // Schedule alarm for medication if nextDose is set
     if (m.nextDose != null && m.nextDose!.isAfter(DateTime.now())) {
       await _notificationService.scheduleMedicationAlarm(
@@ -54,7 +54,7 @@ class MedicationRepository {
 
   Future<void> delete(String id) async {
     await _box?.delete(id);
-    
+
     // Cancel alarm when medication is deleted
     await _notificationService.cancelMedicationAlarm(id);
   }

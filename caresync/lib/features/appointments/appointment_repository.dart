@@ -22,7 +22,7 @@ class AppointmentRepository {
   Future<void> addOrUpdate(Appointment a) async {
     if (_box == null) await init();
     await _box!.put(a.id, a);
-    
+
     // Schedule alarm for appointment if in future
     if (a.datetime.isAfter(DateTime.now())) {
       await _notificationService.scheduleAppointmentAlarm(
@@ -40,7 +40,7 @@ class AppointmentRepository {
   Future<void> delete(String id) async {
     if (_box == null) await init();
     await _box!.delete(id);
-    
+
     // Cancel alarm when appointment is deleted
     await _notificationService.cancelAppointmentAlarm(id);
   }

@@ -42,7 +42,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     'AB+',
     'AB-',
     'O+',
-    'O-'
+    'O-',
   ];
 
   @override
@@ -50,20 +50,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     _nameController = TextEditingController(text: widget.profile.name);
     _phoneController = TextEditingController(text: widget.profile.phone ?? '');
-    _addressController =
-        TextEditingController(text: widget.profile.address ?? '');
-    _emergencyContactController =
-        TextEditingController(text: widget.profile.emergencyContact ?? '');
-    _emergencyContactNameController =
-        TextEditingController(text: widget.profile.emergencyContactName ?? '');
-    _insuranceProviderController =
-        TextEditingController(text: widget.profile.insuranceProvider ?? '');
-    _insurancePolicyController =
-        TextEditingController(text: widget.profile.insurancePolicyNumber ?? '');
+    _addressController = TextEditingController(
+      text: widget.profile.address ?? '',
+    );
+    _emergencyContactController = TextEditingController(
+      text: widget.profile.emergencyContact ?? '',
+    );
+    _emergencyContactNameController = TextEditingController(
+      text: widget.profile.emergencyContactName ?? '',
+    );
+    _insuranceProviderController = TextEditingController(
+      text: widget.profile.insuranceProvider ?? '',
+    );
+    _insurancePolicyController = TextEditingController(
+      text: widget.profile.insurancePolicyNumber ?? '',
+    );
     _heightController = TextEditingController(
-        text: widget.profile.height?.toString() ?? '');
+      text: widget.profile.height?.toString() ?? '',
+    );
     _weightController = TextEditingController(
-        text: widget.profile.weight?.toString() ?? '');
+      text: widget.profile.weight?.toString() ?? '',
+    );
 
     _selectedDate = widget.profile.dateOfBirth;
     _selectedGender = widget.profile.gender;
@@ -142,7 +149,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
+      initialDate:
+          _selectedDate ??
+          DateTime.now().subtract(const Duration(days: 365 * 25)),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -348,10 +357,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            blurRadius: 10,
-            color: Colors.black.withOpacity(0.05),
-          ),
+          BoxShadow(blurRadius: 10, color: Colors.black.withOpacity(0.05)),
         ],
       ),
       child: Column(
@@ -388,9 +394,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey[50],
       ),
@@ -403,10 +407,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: 'Date of Birth',
-          prefixIcon: const Icon(Icons.calendar_today, color: Color(0xFF2563EB)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+          prefixIcon: const Icon(
+            Icons.calendar_today,
+            color: Color(0xFF2563EB),
           ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Colors.grey[50],
         ),
@@ -434,9 +439,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey[50],
       ),
@@ -490,13 +493,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
             spacing: 8,
             runSpacing: 8,
             children: items
-                .map((item) => Chip(
-                      label: Text(item),
-                      deleteIcon: const Icon(Icons.close, size: 18),
-                      onDeleted: () => setState(() => items.remove(item)),
-                      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
-                      labelStyle: const TextStyle(color: Color(0xFF2563EB)),
-                    ))
+                .map(
+                  (item) => Chip(
+                    label: Text(item),
+                    deleteIcon: const Icon(Icons.close, size: 18),
+                    onDeleted: () => setState(() => items.remove(item)),
+                    backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
+                    labelStyle: const TextStyle(color: Color(0xFF2563EB)),
+                  ),
+                )
                 .toList(),
           ),
       ],

@@ -334,7 +334,8 @@ class _DashboardPageState extends State<DashboardPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const NotificationSettingsPage(),
+                                  builder: (_) =>
+                                      const NotificationSettingsPage(),
                                 ),
                               );
                             },
@@ -1875,16 +1876,16 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading profile: $e')));
       }
     }
   }
 
   Future<void> _editProfile() async {
     if (_profile == null) return;
-    
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -1949,32 +1950,32 @@ class _ProfilePageState extends State<ProfilePage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _profile == null
-              ? const Center(child: Text('Failed to load profile'))
-              : RefreshIndicator(
-                  onRefresh: _loadProfile,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        _buildProfileHeader(),
-                        const SizedBox(height: 24),
-                        _buildQuickStats(),
-                        const SizedBox(height: 24),
-                        _buildPersonalInfo(),
-                        const SizedBox(height: 16),
-                        _buildHealthInfo(),
-                        const SizedBox(height: 16),
-                        _buildEmergencyContact(),
-                        const SizedBox(height: 16),
-                        _buildInsuranceInfo(),
-                        const SizedBox(height: 32),
-                        _buildEditButton(),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
+          ? const Center(child: Text('Failed to load profile'))
+          : RefreshIndicator(
+              onRefresh: _loadProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(),
+                    const SizedBox(height: 24),
+                    _buildQuickStats(),
+                    const SizedBox(height: 24),
+                    _buildPersonalInfo(),
+                    const SizedBox(height: 16),
+                    _buildHealthInfo(),
+                    const SizedBox(height: 16),
+                    _buildEmergencyContact(),
+                    const SizedBox(height: 16),
+                    _buildInsuranceInfo(),
+                    const SizedBox(height: 32),
+                    _buildEditButton(),
+                    const SizedBox(height: 20),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 
@@ -2010,18 +2011,28 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: 112,
                           height: 112,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.person, size: 60, color: Color(0xFF2563EB)),
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Color(0xFF2563EB),
+                          ),
                         ),
                       )
-                    : const Icon(Icons.person, size: 60, color: Color(0xFF2563EB)),
+                    : const Icon(
+                        Icons.person,
+                        size: 60,
+                        color: Color(0xFF2563EB),
+                      ),
               ),
               if (_profile!.bloodGroup != null)
                 Positioned(
                   bottom: 0,
                   right: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(20),
@@ -2056,10 +2067,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(width: 8),
               Text(
                 _profile!.email,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
               ),
             ],
           ),
@@ -2072,10 +2080,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(width: 8),
                 Text(
                   _profile!.phone!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ],
             ),
@@ -2097,7 +2102,8 @@ class _ProfilePageState extends State<ProfilePage> {
               color: const Color(0xFFF59E0B),
             ),
           ),
-        if (_profile!.age != null && _profile!.bmi != null) const SizedBox(width: 12),
+        if (_profile!.age != null && _profile!.bmi != null)
+          const SizedBox(width: 12),
         if (_profile!.bmi != null)
           Expanded(
             child: _buildStatCard(
@@ -2139,13 +2145,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
@@ -2157,8 +2157,11 @@ class _ProfilePageState extends State<ProfilePage> {
       icon: Icons.person,
       children: [
         if (_profile!.dateOfBirth != null)
-          _buildInfoRow(Icons.cake, 'Date of Birth',
-              DateFormat('MMMM dd, yyyy').format(_profile!.dateOfBirth!)),
+          _buildInfoRow(
+            Icons.cake,
+            'Date of Birth',
+            DateFormat('MMMM dd, yyyy').format(_profile!.dateOfBirth!),
+          ),
         if (_profile!.gender != null)
           _buildInfoRow(Icons.wc, 'Gender', _profile!.gender!),
         if (_profile!.bloodGroup != null)
@@ -2170,7 +2173,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildHealthInfo() {
-    final hasHealthInfo = (_profile!.height != null ||
+    final hasHealthInfo =
+        (_profile!.height != null ||
         _profile!.weight != null ||
         (_profile!.allergies?.isNotEmpty ?? false) ||
         (_profile!.chronicDiseases?.isNotEmpty ?? false) ||
@@ -2185,22 +2189,35 @@ class _ProfilePageState extends State<ProfilePage> {
         if (_profile!.height != null)
           _buildInfoRow(Icons.height, 'Height', '${_profile!.height} cm'),
         if (_profile!.weight != null)
-          _buildInfoRow(Icons.monitor_weight, 'Weight', '${_profile!.weight} kg'),
+          _buildInfoRow(
+            Icons.monitor_weight,
+            'Weight',
+            '${_profile!.weight} kg',
+          ),
         if (_profile!.allergies?.isNotEmpty ?? false)
           _buildChipRow(Icons.warning, 'Allergies', _profile!.allergies!),
         if (_profile!.chronicDiseases?.isNotEmpty ?? false)
           _buildChipRow(
-              Icons.local_hospital, 'Chronic Diseases', _profile!.chronicDiseases!),
+            Icons.local_hospital,
+            'Chronic Diseases',
+            _profile!.chronicDiseases!,
+          ),
         if (_profile!.medications?.isNotEmpty ?? false)
-          _buildChipRow(Icons.medication, 'Medications', _profile!.medications!),
+          _buildChipRow(
+            Icons.medication,
+            'Medications',
+            _profile!.medications!,
+          ),
       ],
     );
   }
 
   Widget _buildEmergencyContact() {
-    final hasEmergency = (_profile!.emergencyContactName != null &&
+    final hasEmergency =
+        (_profile!.emergencyContactName != null &&
             _profile!.emergencyContactName!.isNotEmpty) ||
-        (_profile!.emergencyContact != null && _profile!.emergencyContact!.isNotEmpty);
+        (_profile!.emergencyContact != null &&
+            _profile!.emergencyContact!.isNotEmpty);
 
     if (!hasEmergency) return const SizedBox.shrink();
 
@@ -2211,15 +2228,24 @@ class _ProfilePageState extends State<ProfilePage> {
         if (_profile!.emergencyContactName != null &&
             _profile!.emergencyContactName!.isNotEmpty)
           _buildInfoRow(
-              Icons.person_outline, 'Name', _profile!.emergencyContactName!),
-        if (_profile!.emergencyContact != null && _profile!.emergencyContact!.isNotEmpty)
-          _buildInfoRow(Icons.phone_in_talk, 'Phone', _profile!.emergencyContact!),
+            Icons.person_outline,
+            'Name',
+            _profile!.emergencyContactName!,
+          ),
+        if (_profile!.emergencyContact != null &&
+            _profile!.emergencyContact!.isNotEmpty)
+          _buildInfoRow(
+            Icons.phone_in_talk,
+            'Phone',
+            _profile!.emergencyContact!,
+          ),
       ],
     );
   }
 
   Widget _buildInsuranceInfo() {
-    final hasInsurance = (_profile!.insuranceProvider != null &&
+    final hasInsurance =
+        (_profile!.insuranceProvider != null &&
             _profile!.insuranceProvider!.isNotEmpty) ||
         (_profile!.insurancePolicyNumber != null &&
             _profile!.insurancePolicyNumber!.isNotEmpty);
@@ -2233,11 +2259,17 @@ class _ProfilePageState extends State<ProfilePage> {
         if (_profile!.insuranceProvider != null &&
             _profile!.insuranceProvider!.isNotEmpty)
           _buildInfoRow(
-              Icons.business, 'Provider', _profile!.insuranceProvider!),
+            Icons.business,
+            'Provider',
+            _profile!.insuranceProvider!,
+          ),
         if (_profile!.insurancePolicyNumber != null &&
             _profile!.insurancePolicyNumber!.isNotEmpty)
-          _buildInfoRow(Icons.confirmation_number, 'Policy Number',
-              _profile!.insurancePolicyNumber!),
+          _buildInfoRow(
+            Icons.confirmation_number,
+            'Policy Number',
+            _profile!.insurancePolicyNumber!,
+          ),
       ],
     );
   }
@@ -2296,10 +2328,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -2329,10 +2358,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(width: 12),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -2341,14 +2367,16 @@ class _ProfilePageState extends State<ProfilePage> {
             spacing: 8,
             runSpacing: 8,
             children: items
-                .map((item) => Chip(
-                      label: Text(item),
-                      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
-                      labelStyle: const TextStyle(
-                        color: Color(0xFF2563EB),
-                        fontSize: 12,
-                      ),
-                    ))
+                .map(
+                  (item) => Chip(
+                    label: Text(item),
+                    backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontSize: 12,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ],

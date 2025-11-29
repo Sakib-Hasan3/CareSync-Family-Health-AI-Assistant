@@ -84,7 +84,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         children: [
           Row(
             children: const [
-              Icon(Icons.notifications_active, color: Color(0xFF2563EB), size: 28),
+              Icon(
+                Icons.notifications_active,
+                color: Color(0xFF2563EB),
+                size: 28,
+              ),
               SizedBox(width: 12),
               Text(
                 'Test Alarms',
@@ -214,10 +218,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _pendingAlarms.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 24,
-                color: Colors.grey[200],
-              ),
+              separatorBuilder: (_, __) =>
+                  Divider(height: 24, color: Colors.grey[200]),
               itemBuilder: (context, index) {
                 final alarm = _pendingAlarms[index];
                 return _buildAlarmCard(alarm);
@@ -266,10 +268,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 const SizedBox(height: 4),
                 Text(
                   alarm.body ?? '',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -455,7 +454,9 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }

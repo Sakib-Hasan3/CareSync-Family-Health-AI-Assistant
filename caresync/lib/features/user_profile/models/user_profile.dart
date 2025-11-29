@@ -85,8 +85,8 @@ class UserProfile extends HiveObject {
     this.weight,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   UserProfile copyWith({
     String? id,
@@ -124,7 +124,8 @@ class UserProfile extends HiveObject {
       emergencyContact: emergencyContact ?? this.emergencyContact,
       emergencyContactName: emergencyContactName ?? this.emergencyContactName,
       insuranceProvider: insuranceProvider ?? this.insuranceProvider,
-      insurancePolicyNumber: insurancePolicyNumber ?? this.insurancePolicyNumber,
+      insurancePolicyNumber:
+          insurancePolicyNumber ?? this.insurancePolicyNumber,
       height: height ?? this.height,
       weight: weight ?? this.weight,
       createdAt: createdAt,
@@ -133,57 +134,57 @@ class UserProfile extends HiveObject {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'photoUrl': photoUrl,
-        'dateOfBirth': dateOfBirth?.toIso8601String(),
-        'gender': gender,
-        'bloodGroup': bloodGroup,
-        'address': address,
-        'allergies': allergies,
-        'chronicDiseases': chronicDiseases,
-        'medications': medications,
-        'emergencyContact': emergencyContact,
-        'emergencyContactName': emergencyContactName,
-        'insuranceProvider': insuranceProvider,
-        'insurancePolicyNumber': insurancePolicyNumber,
-        'height': height,
-        'weight': weight,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'phone': phone,
+    'photoUrl': photoUrl,
+    'dateOfBirth': dateOfBirth?.toIso8601String(),
+    'gender': gender,
+    'bloodGroup': bloodGroup,
+    'address': address,
+    'allergies': allergies,
+    'chronicDiseases': chronicDiseases,
+    'medications': medications,
+    'emergencyContact': emergencyContact,
+    'emergencyContactName': emergencyContactName,
+    'insuranceProvider': insuranceProvider,
+    'insurancePolicyNumber': insurancePolicyNumber,
+    'height': height,
+    'weight': weight,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        phone: json['phone'] as String?,
-        photoUrl: json['photoUrl'] as String?,
-        dateOfBirth: json['dateOfBirth'] != null
-            ? DateTime.parse(json['dateOfBirth'] as String)
-            : null,
-        gender: json['gender'] as String?,
-        bloodGroup: json['bloodGroup'] as String?,
-        address: json['address'] as String?,
-        allergies: (json['allergies'] as List<dynamic>?)?.cast<String>(),
-        chronicDiseases:
-            (json['chronicDiseases'] as List<dynamic>?)?.cast<String>(),
-        medications: (json['medications'] as List<dynamic>?)?.cast<String>(),
-        emergencyContact: json['emergencyContact'] as String?,
-        emergencyContactName: json['emergencyContactName'] as String?,
-        insuranceProvider: json['insuranceProvider'] as String?,
-        insurancePolicyNumber: json['insurancePolicyNumber'] as String?,
-        height: json['height'] as double?,
-        weight: json['weight'] as double?,
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'] as String)
-            : DateTime.now(),
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.parse(json['updatedAt'] as String)
-            : DateTime.now(),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    email: json['email'] as String,
+    phone: json['phone'] as String?,
+    photoUrl: json['photoUrl'] as String?,
+    dateOfBirth: json['dateOfBirth'] != null
+        ? DateTime.parse(json['dateOfBirth'] as String)
+        : null,
+    gender: json['gender'] as String?,
+    bloodGroup: json['bloodGroup'] as String?,
+    address: json['address'] as String?,
+    allergies: (json['allergies'] as List<dynamic>?)?.cast<String>(),
+    chronicDiseases: (json['chronicDiseases'] as List<dynamic>?)
+        ?.cast<String>(),
+    medications: (json['medications'] as List<dynamic>?)?.cast<String>(),
+    emergencyContact: json['emergencyContact'] as String?,
+    emergencyContactName: json['emergencyContactName'] as String?,
+    insuranceProvider: json['insuranceProvider'] as String?,
+    insurancePolicyNumber: json['insurancePolicyNumber'] as String?,
+    height: json['height'] as double?,
+    weight: json['weight'] as double?,
+    createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'] as String)
+        : DateTime.now(),
+    updatedAt: json['updatedAt'] != null
+        ? DateTime.parse(json['updatedAt'] as String)
+        : DateTime.now(),
+  );
 
   int? get age {
     if (dateOfBirth == null) return null;

@@ -21,7 +21,7 @@ Future<void> main() async {
 
   // Initialize Hive for local storage used by medications/appointments
   await Hive.initFlutter();
-  
+
   // Initialize notification service for medication and appointment alarms
   await NotificationService().initialize();
 
