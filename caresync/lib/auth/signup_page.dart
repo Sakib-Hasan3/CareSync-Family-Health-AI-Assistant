@@ -59,14 +59,15 @@ class _SignupPageState extends State<SignupPage> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account created! Please verify your email.'),
+          content: Text('Account created! Verification email sent. Please check your inbox.'),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 4),
         ),
       );
 
-      // Navigate to email verification page
-      Navigator.pushReplacementNamed(context, '/verify-email');
+      // Navigate back to login page
+      Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

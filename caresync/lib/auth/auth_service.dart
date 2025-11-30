@@ -25,8 +25,18 @@ class AuthService {
       // Update display name
       await credential.user?.updateDisplayName(displayName);
 
-      // Send email verification
-      await credential.user?.sendEmailVerification();
+      // Send email verification with action code settings
+      final actionCodeSettings = ActionCodeSettings(
+        url: 'https://caresync-family-health-ai-assistant.firebaseapp.com',
+        handleCodeInApp: false,
+        androidPackageName: 'com.caresync.app',
+        iOSBundleId: 'com.caresync.app',
+      );
+
+      await credential.user?.sendEmailVerification(actionCodeSettings);
+
+      // Sign out immediately after registration
+      await _auth.signOut();
 
       return credential;
     } on FirebaseAuthException catch (e) {
