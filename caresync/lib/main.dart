@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'auth/home_page.dart';
 import 'auth/login_page.dart';
 import 'auth/signup_page.dart';
+import 'auth/email_verification_page.dart';
 import 'dashboard/dashboard_page.dart';
 import 'features/directory/browse_and_book.dart';
 import 'features/directory/admin_page.dart';
@@ -42,6 +43,7 @@ class CareSyncApp extends StatelessWidget {
         '/': (_) => const HomePage(),
         '/login': (_) => const LoginPage(),
         '/signup': (_) => const SignupPage(),
+        '/verify-email': (_) => const EmailVerificationPage(),
         '/dashboard': (_) => const DashboardPage(),
         '/directory/browse': (_) => const BrowseAndBookPage(),
         '/directory/admin': (_) => const DirectoryAdminPage(),

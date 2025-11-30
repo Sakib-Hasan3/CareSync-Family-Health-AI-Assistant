@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,6 +9,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _authService = AuthService();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
@@ -27,25 +28,83 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _loading = true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await _authService.signInWithEmail(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
       );
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/dashboard');
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message ?? 'Login failed'),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _loading = true);
+    try {
+      final credential = await _authService.signInWithGoogle();
+      if (credential != null && mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    if (_emailCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _authService.sendPasswordResetEmail(_emailCtrl.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent! Check your inbox.'),
+            backgroundColor: Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -88,9 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          // Navigate to forgot password screen
-                        },
+                        onPressed: _forgotPassword,
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -278,10 +335,13 @@ class _LoginPageState extends State<LoginPage> {
         // Google Login
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Implement Google sign-in
-            },
-            icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
+            onPressed: _loading ? null : _signInWithGoogle,
+            icon: Image.network(
+              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+              height: 20,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.g_mobiledata_rounded, size: 24),
+            ),
             label: const Text('Google'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.grey.shade700,
@@ -295,16 +355,14 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(width: 16),
 
-        // Apple Login
+        // Apple Login (disabled for now)
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Implement Apple sign-in
-            },
+            onPressed: null,
             icon: const Icon(Icons.apple, size: 20),
             label: const Text('Apple'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey.shade700,
+              foregroundColor: Colors.grey.shade400,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

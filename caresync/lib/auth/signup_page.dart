@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_service.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -9,6 +9,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _authService = AuthService();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
@@ -37,6 +38,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please agree to the terms and conditions'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -44,41 +46,60 @@ class _SignupPageState extends State<SignupPage> {
 
     setState(() => _loading = true);
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final displayName = '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
+      
+      await _authService.signUpWithEmail(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
+        displayName: displayName,
       );
-      if (!mounted) return;
 
-      // Sign out the user immediately after account creation
-      await FirebaseAuth.instance.signOut();
+      if (!mounted) return;
 
       // Show success message
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Account created successfully! Please log in.'),
-          backgroundColor: Colors.green.shade600,
+        const SnackBar(
+          content: Text('Account created! Please verify your email.'),
+          backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
         ),
       );
 
-      // Navigate to login page
-      Navigator.pushReplacementNamed(context, '/login');
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message ?? 'Signup failed'),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      // Navigate to email verification page
+      Navigator.pushReplacementNamed(context, '/verify-email');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
           ),
-        ),
-      );
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    setState(() => _loading = true);
+    try {
+      final credential = await _authService.signInWithGoogle();
+      if (credential != null && mounted) {
+        // Google accounts are automatically verified
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -470,10 +491,13 @@ class _SignupPageState extends State<SignupPage> {
         // Google Sign Up
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Implement Google sign-up
-            },
-            icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
+            onPressed: _loading ? null : _signUpWithGoogle,
+            icon: Image.network(
+              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+              height: 20,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.g_mobiledata_rounded, size: 24),
+            ),
             label: const Text('Google'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.grey.shade700,
@@ -487,16 +511,14 @@ class _SignupPageState extends State<SignupPage> {
         ),
         const SizedBox(width: 16),
 
-        // Apple Sign Up
+        // Apple Sign Up (disabled)
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Implement Apple sign-up
-            },
+            onPressed: null,
             icon: const Icon(Icons.apple, size: 20),
             label: const Text('Apple'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey.shade700,
+              foregroundColor: Colors.grey.shade400,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
