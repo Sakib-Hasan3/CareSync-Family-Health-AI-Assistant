@@ -47,9 +47,10 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _loading = true);
     try {
       final displayName = '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
+      final email = _emailCtrl.text.trim();
       
       await _authService.signUpWithEmail(
-        email: _emailCtrl.text.trim(),
+        email: email,
         password: _passCtrl.text,
         displayName: displayName,
       );
@@ -59,15 +60,19 @@ class _SignupPageState extends State<SignupPage> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account created! Verification email sent. Please check your inbox.'),
+          content: Text('Account created! Please verify your email with the OTP code.'),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 4),
+          duration: Duration(seconds: 3),
         ),
       );
 
-      // Navigate back to login page
-      Navigator.pushReplacementNamed(context, '/login');
+      // Navigate to OTP verification page
+      Navigator.pushReplacementNamed(
+        context, 
+        '/otp-verification',
+        arguments: {'email': email, 'isSignup': true},
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

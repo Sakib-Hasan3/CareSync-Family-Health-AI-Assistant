@@ -7,6 +7,7 @@ import 'auth/home_page.dart';
 import 'auth/login_page.dart';
 import 'auth/signup_page.dart';
 import 'auth/email_verification_page.dart';
+import 'auth/otp_verification_page.dart';
 import 'dashboard/dashboard_page.dart';
 import 'features/directory/browse_and_book.dart';
 import 'features/directory/admin_page.dart';
@@ -49,6 +50,18 @@ class CareSyncApp extends StatelessWidget {
         '/directory/admin': (_) => const DirectoryAdminPage(),
         '/medical-records': (_) => const MedicalRecordsPage(),
         '/appointments': (_) => const AppointmentsPage(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/otp-verification') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => OTPVerificationPage(
+              email: args['email'] as String,
+              isSignup: args['isSignup'] as bool? ?? false,
+            ),
+          );
+        }
+        return null;
       },
     );
   }
