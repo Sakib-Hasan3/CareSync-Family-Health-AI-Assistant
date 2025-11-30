@@ -92,11 +92,29 @@ class _SignupPageState extends State<SignupPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
+        // Show detailed error with dismiss button
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Color(0xFF2563EB)),
+                SizedBox(width: 12),
+                Text('Google Sign-Up'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Text(
+                e.toString(),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }
