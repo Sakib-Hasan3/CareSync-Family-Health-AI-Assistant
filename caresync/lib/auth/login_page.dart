@@ -52,32 +52,6 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() => _loading = false);
     }
   }
-      
-      if (!(credential.user?.emailVerified ?? true)) {
-        await credential.user?.sendEmailVerification();
-        await FirebaseAuth.instance.signOut();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Verification email sent! Check your inbox.'),
-              backgroundColor: Color(0xFF10B981),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to resend: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _signInWithGoogle() async {
     setState(() => _loading = true);
