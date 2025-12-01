@@ -21,7 +21,6 @@ import 'package:caresync/features/blood/ui/donor_registration_page.dart';
 import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
-import 'package:caresync/features/notifications/notification_settings_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
 import 'package:caresync/features/user_profile/user_profile_repository.dart';
 import 'package:caresync/features/user_profile/models/user_profile.dart';
@@ -285,6 +284,15 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                           ),
                           _QuickActionGridItem(
+                            icon: Iconsax.search_normal,
+                            label: 'Find Donors',
+                            color: const Color(0xFFDC2626),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/donor-search');
+                            },
+                          ),
+                          _QuickActionGridItem(
                             icon: Iconsax.activity,
                             label: 'Health Timeline',
                             color: const Color(0xFF2563EB),
@@ -341,7 +349,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                           ),
                           _QuickActionGridItem(
-                            icon: Iconsax.setting,
+                            icon: Icons.admin_panel_settings,
                             label: 'Admin Panel',
                             color: const Color(0xFF7C3AED),
                             onTap: () {

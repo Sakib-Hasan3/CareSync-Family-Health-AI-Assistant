@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -36,19 +37,97 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+        final errorMessage = e.toString();
+        
+        // Check if it's email verification error
+        if (errorMessage.contains('verify your email') || 
+            errorMessage.contains('verification link')) {
+          _showVerificationDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.email_outlined, color: Color(0xFFF59E0B)),
+            SizedBox(width: 12),
+            Text('Email Not Verified'),
+          ],
+        ),
+        content: const Text(
+          'Please verify your email address before logging in.\n\n'
+          'Check your inbox for the verification link. '
+          'If you didn\'t receive it, you can request a new one.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _resendVerificationEmail();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+            ),
+            child: const Text('Resend Link'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    try {
+      // Sign in temporarily to send verification
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
+      
+      await _authService.resendVerificationEmail();
+      
+      // Sign out after sending
+      await FirebaseAuth.instance.signOut();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification link sent! Check your email.'),
+            backgroundColor: Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to resend: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

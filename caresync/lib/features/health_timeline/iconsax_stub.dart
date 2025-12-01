@@ -45,4 +45,6 @@ class Iconsax {
   static const IconData box = Icons.inventory;
   static const IconData call_calling = Icons.phone;
   static const IconData logout_1 = Icons.logout;
+  static const IconData search_normal = Icons.search;
+  static const IconData setting = Icons.settings;
 }

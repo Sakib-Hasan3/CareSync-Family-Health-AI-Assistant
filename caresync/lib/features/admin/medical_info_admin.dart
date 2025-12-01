@@ -11,7 +11,6 @@ class MedicalInfoAdminPage extends StatefulWidget {
 class _MedicalInfoAdminPageState extends State<MedicalInfoAdminPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {

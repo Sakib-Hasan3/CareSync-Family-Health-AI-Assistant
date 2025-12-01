@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'otp_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final OTPService _otpService = OTPService();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -11,7 +9,7 @@ class AuthService {
   // Stream of auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Email/Password Sign Up with OTP Verification
+  // Email/Password Sign Up with Email Verification Link
   Future<UserCredential?> signUpWithEmail({
     required String email,
     required String password,
@@ -27,11 +25,8 @@ class AuthService {
       // Update display name
       await credential.user?.updateDisplayName(displayName);
 
-      // Send OTP via email
-      final otp = await _otpService.sendOTPEmail(email);
-      
-      // For testing: print OTP to console
-      print('DEBUG: OTP for $email: $otp');
+      // Send email verification link
+      await credential.user?.sendEmailVerification();
 
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -50,36 +45,46 @@ class AuthService {
         password: password,
       );
 
+      // Check if email is verified
+      if (!credential.user!.emailVerified) {
+        throw 'Please verify your email first. Check your inbox for the verification link.';
+      }
+
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
-  // Send OTP for email verification
-  Future<String> sendOTPForVerification(String email) async {
+  // Send Email Verification Link
+  Future<void> sendEmailVerification() async {
     try {
-      return await _otpService.sendOTPEmail(email);
-    } catch (e) {
-      throw 'Failed to send OTP: ${e.toString()}';
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      } else if (user == null) {
+        throw 'No user is currently signed in.';
+      } else {
+        throw 'Email is already verified.';
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
     }
   }
 
-  // Verify OTP
-  Future<bool> verifyOTP(String email, String otp) async {
+  // Resend Verification Email
+  Future<void> resendVerificationEmail() async {
     try {
-      return await _otpService.verifyOTP(email: email, otp: otp);
-    } catch (e) {
-      throw e.toString();
-    }
-  }
-
-  // Resend OTP
-  Future<String> resendOTP(String email) async {
-    try {
-      return await _otpService.resendOTP(email);
-    } catch (e) {
-      throw 'Failed to resend OTP: ${e.toString()}';
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      } else if (user == null) {
+        throw 'No user is currently signed in.';
+      } else {
+        throw 'Email is already verified.';
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
     }
   }
 
@@ -114,38 +119,6 @@ class AuthService {
       throw _handleAuthException(e);
     } catch (e) {
       throw 'Google sign-in failed: ${e.toString()}\n\nPlease use email/password sign-in instead.';
-    }
-  }
-
-  // Send Email Verification OTP
-  Future<void> sendEmailVerification() async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-      } else if (user == null) {
-        throw 'No user is currently signed in.';
-      } else {
-        throw 'Email is already verified.';
-      }
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    }
-  }
-
-  // Resend Verification Email
-  Future<void> resendVerificationEmail() async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-      } else if (user == null) {
-        throw 'No user is currently signed in.';
-      } else {
-        throw 'Email is already verified.';
-      }
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
     }
   }
 
