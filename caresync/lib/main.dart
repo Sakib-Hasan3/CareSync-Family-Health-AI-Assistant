@@ -11,8 +11,13 @@ import 'auth/otp_verification_page.dart';
 import 'dashboard/dashboard_page.dart';
 import 'features/directory/browse_and_book.dart';
 import 'features/directory/admin_page.dart';
+import 'features/admin/admin_dashboard.dart';
+import 'features/admin/medical_info_admin.dart';
+import 'features/admin/medications_admin.dart';
+import 'features/admin/health_guides_admin.dart';
 import 'package:caresync/features/medical_records/medical_records_page.dart';
 import 'package:caresync/features/appointments/appointment_page.dart';
+import 'package:caresync/features/alarms/alarm_settings_page.dart';
 import 'package:caresync/shared/services/notification_service.dart';
 
 Future<void> main() async {
@@ -50,6 +55,11 @@ class CareSyncApp extends StatelessWidget {
         '/directory/admin': (_) => const DirectoryAdminPage(),
         '/medical-records': (_) => const MedicalRecordsPage(),
         '/appointments': (_) => const AppointmentsPage(),
+        '/alarm-settings': (_) => const AlarmSettingsPage(),
+        '/admin': (_) => const AdminDashboard(),
+        '/admin/medical-info': (_) => const MedicalInfoAdminPage(),
+        '/admin/medications': (_) => const MedicationsAdminPage(),
+        '/admin/health-guides': (_) => const HealthGuidesAdminPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp-verification') {

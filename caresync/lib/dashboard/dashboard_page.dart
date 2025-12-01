@@ -22,6 +22,7 @@ import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
 import 'package:caresync/features/notifications/notification_settings_page.dart';
+import 'package:caresync/features/alarms/alarm_settings_page.dart';
 import 'package:caresync/features/user_profile/user_profile_repository.dart';
 import 'package:caresync/features/user_profile/models/user_profile.dart';
 import 'package:caresync/features/user_profile/edit_profile_page.dart';
@@ -334,10 +335,18 @@ class _DashboardPageState extends State<DashboardPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const NotificationSettingsPage(),
+                                  builder: (_) => const AlarmSettingsPage(),
                                 ),
                               );
+                            },
+                          ),
+                          _QuickActionGridItem(
+                            icon: Iconsax.setting,
+                            label: 'Admin Panel',
+                            color: const Color(0xFF7C3AED),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/admin');
                             },
                           ),
                         ],
@@ -568,6 +577,10 @@ class _DashboardHomeState extends State<DashboardHome> {
 
               // Emergency Contacts Quick Access
               _buildEmergencyContactsCard(),
+              const SizedBox(height: 24),
+
+              // Alarm Settings Quick Access
+              _buildAlarmSettingsCard(),
               const SizedBox(height: 24),
 
               // Health Overview Cards
@@ -906,6 +919,83 @@ class _DashboardHomeState extends State<DashboardHome> {
               ),
               child: const Icon(
                 Icons.phone_enabled,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlarmSettingsCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AlarmSettingsPage()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(blurRadius: 12, color: Colors.purple.withOpacity(0.3)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.alarm,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Medication & Appointment Alarms',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage all your health reminders',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_active,
                 color: Colors.white,
                 size: 20,
               ),
