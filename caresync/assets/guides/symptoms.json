@@ -1,0 +1,31 @@
+{
+  "title": "Common Symptom Guides",
+  "items": [
+    {
+      "topic": "Fever",
+      "info": "Measure temperature accurately. Hydrate, rest. Use acetaminophen or ibuprofen per label unless contraindicated.",
+      "red_flags": [
+        "Fever > 40°C (104°F)",
+        "Stiff neck, confusion, severe headache",
+        "Persistent fever > 3 days or in infants < 3 months"
+      ]
+    },
+    {
+      "topic": "Chest Pain",
+      "info": "If crushing, radiating to arm/jaw, associated with shortness of breath, sweating, or nausea—this is an emergency.",
+      "red_flags": [
+        "New or worsening chest pain",
+        "Pain with shortness of breath, fainting, or palpitations"
+      ]
+    },
+    {
+      "topic": "Abdominal Pain",
+      "info": "Track location, severity, triggers. Hydrate, avoid heavy foods. Seek care if pain is severe or persistent.",
+      "red_flags": [
+        "Severe, constant pain",
+        "Bloody stool or vomiting",
+        "Fever with localized pain (e.g., right lower abdomen)"
+      ]
+    }
+  ]
+}
