@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'firebase_options.dart';
@@ -18,7 +19,15 @@ import 'features/admin/health_guides_admin.dart';
 import 'features/blood/donor_search_page.dart';
 import 'package:caresync/features/medical_records/medical_records_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
+import 'package:caresync/features/prescription_scanner/prescription_scanner_page.dart';
+import 'package:caresync/features/vaccination/vaccination_tracker_page.dart';
+import 'package:caresync/features/sos/sos_panic_page.dart';
 import 'package:caresync/shared/services/notification_service.dart';
+import 'package:caresync/shared/app_settings.dart';
+import 'package:caresync/features/settings/settings_page.dart';
+import 'package:caresync/features/settings/pin_lock_screen.dart';
+import 'package:caresync/features/onboarding/onboarding_page.dart';
+import 'package:caresync/features/reports/doctor_share_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,19 +41,290 @@ Future<void> main() async {
   // Initialize notification service for medication and appointment alarms
   await NotificationService().initialize();
 
+  // Initialize AppSettings (dark mode, font scale, pin, onboarding)
+  await AppSettings().init();
+
+  // Schedule weekly health digest notification (every Monday 8 AM)
+  unawaited(NotificationService().scheduleWeeklyDigest());
+
   runApp(const CareSyncApp());
 }
 
-class CareSyncApp extends StatelessWidget {
+class CareSyncApp extends StatefulWidget {
   const CareSyncApp({super.key});
 
   @override
+  State<CareSyncApp> createState() => _CareSyncAppState();
+}
+
+class _CareSyncAppState extends State<CareSyncApp> {
+  final _settings = AppSettings();
+
+  @override
+  void initState() {
+    super.initState();
+    _settings.addListener(_onSettingsChanged);
+  }
+
+  @override
+  void dispose() {
+    _settings.removeListener(_onSettingsChanged);
+    super.dispose();
+  }
+
+  void _onSettingsChanged() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MediaQuery(
+      data: MediaQueryData(
+        textScaler: TextScaler.linear(_settings.fontScale),
+      ),
+      child: MaterialApp(
       title: 'CareSync',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
-      initialRoute: '/',
+      themeMode: _settings.themeMode,
+      darkTheme: _buildDarkTheme(),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2563EB),
+          primary: const Color(0xFF2563EB),
+          secondary: const Color(0xFF10B981),
+          error: const Color(0xFFEF4444),
+          surface: Colors.white,
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        // ── AppBar ──────────────────────────────────────────────────────
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: true,
+          backgroundColor: Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          titleTextStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: -0.3,
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
+        // ── Cards ────────────────────────────────────────────────────────
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          margin: EdgeInsets.zero,
+        ),
+        // ── Input fields ──────────────────────────────────────────────────
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFFF8FAFC),
+          labelStyle: TextStyle(
+            color: Color(0xFF64748B),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          prefixIconColor: Color(0xFF64748B),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0xFF2563EB), width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0xFFEF4444)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0xFFEF4444), width: 2),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        // ── Buttons ────────────────────────────────────────────────────────
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            backgroundColor: Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Color(0xFFCBD5E1),
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            minimumSize: Size(double.infinity, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+            textStyle: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Color(0xFF2563EB),
+            side: BorderSide(color: Color(0xFF2563EB), width: 1.5),
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            minimumSize: Size(double.infinity, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+            textStyle: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0xFF2563EB),
+            textStyle: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        // ── SnackBar ─────────────────────────────────────────────────────
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          contentTextStyle: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        // ── Dialogs ──────────────────────────────────────────────────────
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+          elevation: 8,
+          surfaceTintColor: Colors.white,
+        ),
+        // ── Bottom Sheet ──────────────────────────────────────────────────
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          surfaceTintColor: Colors.transparent,
+          elevation: 8,
+        ),
+        // ── Navigation Bar ────────────────────────────────────────────────
+        navigationBarTheme: NavigationBarThemeData(
+          elevation: 0,
+          height: 70,
+          backgroundColor: Colors.white,
+          indicatorColor: Color(0xFF2563EB).withOpacity(0.12),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2563EB),
+              );
+            }
+            return const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: Color(0xFF2563EB), size: 24);
+            }
+            return const IconThemeData(color: Color(0xFF94A3B8), size: 22);
+          }),
+        ),
+        // ── Chip ──────────────────────────────────────────────────────────
+        chipTheme: ChipThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+          side: BorderSide.none,
+        ),
+        // ── Divider ──────────────────────────────────────────────────────
+        dividerTheme: const DividerThemeData(
+          color: Color(0xFFF1F5F9),
+          thickness: 1,
+          space: 0,
+        ),
+        // ── Typography ─────────────────────────────────────────────────────
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
+            letterSpacing: -0.5,
+          ),
+          headlineMedium: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+            letterSpacing: -0.3,
+          ),
+          titleLarge: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+          ),
+          titleMedium: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF334155),
+            height: 1.6,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF475569),
+            height: 1.5,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF64748B),
+          ),
+          labelLarge: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2563EB),
+          ),
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      initialRoute: _settings.onboardingDone ? '/' : '/onboarding',
       routes: {
         '/': (_) => const HomePage(),
         '/login': (_) => const LoginPage(),
@@ -60,6 +340,13 @@ class CareSyncApp extends StatelessWidget {
         '/admin/medications': (_) => const MedicationsAdminPage(),
         '/admin/health-guides': (_) => const HealthGuidesAdminPage(),
         '/donor-search': (_) => const DonorSearchPage(),
+        '/prescription-scanner': (_) => const PrescriptionScannerPage(),
+        '/vaccination-tracker': (_) => const VaccinationTrackerPage(),
+        '/sos': (_) => const SosPanicPage(),
+        '/settings': (_) => const SettingsPage(),
+        '/pin-lock': (_) => const PinLockScreen(),
+        '/onboarding': (_) => const OnboardingPage(),
+        '/doctor-share': (_) => const DoctorSharePage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp-verification') {
@@ -73,6 +360,93 @@ class CareSyncApp extends StatelessWidget {
         }
         return null;
       },
+    ));
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF2563EB),
+        primary: const Color(0xFF3B82F6),
+        secondary: const Color(0xFF10B981),
+        error: const Color(0xFFEF4444),
+        surface: const Color(0xFF1E293B),
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        backgroundColor: Color(0xFF1E293B),
+        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: -0.3,
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+        margin: EdgeInsets.zero,
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        filled: true,
+        fillColor: Color(0xFF1E293B),
+        labelStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+        hintStyle: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: Color(0xFF334155)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: Color(0xFF334155)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: Color(0xFF3B82F6),
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          minimumSize: Size(double.infinity, 54),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        elevation: 0,
+        height: 70,
+        backgroundColor: const Color(0xFF1E293B),
+        indicatorColor: const Color(0xFF3B82F6).withOpacity(0.2),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF334155),
+        thickness: 1,
+        space: 0,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }

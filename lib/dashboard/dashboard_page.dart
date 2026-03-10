@@ -20,6 +20,9 @@ import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
+import 'package:caresync/features/prescription_scanner/prescription_scanner_page.dart';
+import 'package:caresync/features/vaccination/vaccination_tracker_page.dart';
+import 'package:caresync/features/sos/sos_panic_page.dart';
 import 'package:caresync/features/user_profile/user_profile_repository.dart';
 import 'package:caresync/features/user_profile/models/user_profile.dart';
 import 'package:caresync/features/user_profile/edit_profile_page.dart';
@@ -313,6 +316,48 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                           ),
                           _QuickActionGridItem(
+                            icon: Icons.document_scanner_rounded,
+                            label: 'Rx Scanner',
+                            color: const Color(0xFF0891B2),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const PrescriptionScannerPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionGridItem(
+                            icon: Icons.vaccines_rounded,
+                            label: 'Vaccination',
+                            color: const Color(0xFF10B981),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const VaccinationTrackerPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionGridItem(
+                            icon: Icons.sos_rounded,
+                            label: 'SOS Panic',
+                            color: const Color(0xFFDC143C),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SosPanicPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionGridItem(
                             icon: Iconsax.notification,
                             label: 'Alarm Settings',
                             color: const Color(0xFFF59E0B),
@@ -533,6 +578,10 @@ class _DashboardHomeState extends State<DashboardHome> {
 
               // Emergency Quick Access
               _buildEmergencyQuickAccess(),
+              const SizedBox(height: 16),
+
+              // SOS Panic Button
+              _buildSosPanicCard(),
               const SizedBox(height: 24),
 
               // Emergency Contacts Quick Access
@@ -722,13 +771,12 @@ class _DashboardHomeState extends State<DashboardHome> {
               },
             ),
             const SizedBox(width: 8),
-            // Notifications
+            // Settings
             _HeaderIconButton(
-              icon: Iconsax.notification,
-              color: const Color(0xFF64748B),
-              badge: true,
+              icon: Iconsax.setting,
+              color: const Color(0xFF8B5CF6),
               onPressed: () {
-                // Handle notifications
+                Navigator.pushNamed(context, '/settings');
               },
             ),
             const SizedBox(width: 8),
@@ -793,6 +841,59 @@ class _DashboardHomeState extends State<DashboardHome> {
               ),
             ),
             const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSosPanicCard() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SosPanicPage()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFDC143C), Color(0xFFB71C1C)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(blurRadius: 14, color: Color(0xFFDC143C), spreadRadius: -2),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.sos_rounded, color: Colors.white, size: 36),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'SOS Panic Button',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Send live location & alert to emergency contacts',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
           ],
         ),
       ),
@@ -1351,13 +1452,11 @@ class _DashboardHomeState extends State<DashboardHome> {
 class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
   final Color color;
-  final bool badge;
   final VoidCallback onPressed;
 
   const _HeaderIconButton({
     required this.icon,
     required this.color,
-    this.badge = false,
     required this.onPressed,
   });
 
@@ -1372,13 +1471,7 @@ class _HeaderIconButton extends StatelessWidget {
         ],
       ),
       child: IconButton(
-        icon: badge
-            ? Badge(
-                smallSize: 8,
-                backgroundColor: Colors.red,
-                child: Icon(icon, color: color),
-              )
-            : Icon(icon, color: color),
+        icon: Icon(icon, color: color),
         onPressed: onPressed,
       ),
     );

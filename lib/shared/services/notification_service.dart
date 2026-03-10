@@ -82,6 +82,24 @@ class NotificationService {
     // Handle navigation based on payload
   }
 
+  // ── Smart notification helpers ─────────────────────────────────────────────
+
+  /// Returns a contextual greeting based on hour of day.
+  String _smartGreeting(int hour) {
+    if (hour < 12) return 'Good morning!';
+    if (hour < 17) return 'Good afternoon!';
+    if (hour < 21) return 'Good evening!';
+    return 'Good night!';
+  }
+
+  /// Returns a meal context hint based on hour of day.
+  String _mealContext(int hour) {
+    if (hour >= 6 && hour < 10) return 'Take with breakfast 🍳';
+    if (hour >= 12 && hour < 14) return 'Take with lunch 🥗';
+    if (hour >= 18 && hour < 21) return 'Take with dinner 🍽️';
+    return 'Time for your dose 💊';
+  }
+
   /// Schedule medication alarm
   Future<void> scheduleMedicationAlarm({
     required String medicationId,
@@ -106,6 +124,13 @@ class NotificationService {
           return;
         }
       }
+
+      // Smart contextual messages based on time of day
+      final hour = tzScheduledTime.hour;
+      final greeting = _smartGreeting(hour);
+      final mealCtx = _mealContext(hour);
+      final smartTitle = '$greeting Time for $medicationName';
+      final smartBody = '$dosage — $mealCtx';
 
       const androidDetails = AndroidNotificationDetails(
         'medication_alarms',
@@ -139,8 +164,8 @@ class NotificationService {
         // Schedule daily repeating alarm
         await _notifications.zonedSchedule(
           id,
-          '💊 Time to take your medication!',
-          '$medicationName - $dosage',
+          smartTitle,
+          smartBody,
           tzScheduledTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -149,14 +174,14 @@ class NotificationService {
         );
 
         developer.log(
-          '✅ Scheduled DAILY medication alarm for $medicationName at ${tzScheduledTime.hour}:${tzScheduledTime.minute}',
+          '✅ Scheduled DAILY smart alarm for $medicationName at ${tzScheduledTime.hour}:${tzScheduledTime.minute}',
         );
       } else {
         // Schedule one-time alarm
         await _notifications.zonedSchedule(
           id,
-          '💊 Time to take your medication!',
-          '$medicationName - $dosage',
+          smartTitle,
+          smartBody,
           tzScheduledTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -164,7 +189,7 @@ class NotificationService {
         );
 
         developer.log(
-          '✅ Scheduled ONE-TIME medication alarm for $medicationName at $tzScheduledTime',
+          '✅ Scheduled ONE-TIME smart alarm for $medicationName at $tzScheduledTime',
         );
       }
 
@@ -175,8 +200,8 @@ class NotificationService {
       if (reminderTime.isAfter(now)) {
         await _notifications.zonedSchedule(
           id + 10000,
-          '⏰ Medication Reminder',
-          '$medicationName in 15 minutes - $dosage',
+          '⏰ Heads up! $medicationName in 15 min',
+          '$dosage — get ready to take it soon',
           reminderTime,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -187,6 +212,61 @@ class NotificationService {
       }
     } catch (e) {
       developer.log('❌ Error scheduling medication alarm: $e');
+    }
+  }
+
+  /// Schedule weekly health digest — every Monday at 8:00 AM.
+  Future<void> scheduleWeeklyDigest({
+    int totalMeds = 0,
+    int totalMembers = 0,
+  }) async {
+    await initialize();
+
+    try {
+      const id = 99999;
+      final now = tz.TZDateTime.now(tz.local);
+
+      // Find the next Monday at 08:00
+      var nextMonday = tz.TZDateTime(tz.local, now.year, now.month, now.day, 8);
+      // weekday: 1=Mon ... 7=Sun
+      final daysUntilMonday = (DateTime.monday - now.weekday + 7) % 7;
+      nextMonday = nextMonday.add(Duration(days: daysUntilMonday == 0 ? 7 : daysUntilMonday));
+
+      const androidDetails = AndroidNotificationDetails(
+        'weekly_digest',
+        'Weekly Health Digest',
+        channelDescription: 'Your weekly health summary every Monday',
+        importance: Importance.high,
+        priority: Priority.defaultPriority,
+        playSound: true,
+        icon: '@mipmap/ic_launcher',
+        styleInformation: BigTextStyleInformation(
+          'Have a healthy week! Check your medication schedule, upcoming appointments, and family health updates in CareSync.',
+        ),
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+      await _notifications.zonedSchedule(
+        id,
+        '📊 Your Weekly Health Digest',
+        '$totalMeds medications tracked • $totalMembers family members',
+        nextMonday,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: 'weekly_digest',
+      );
+
+      developer.log('✅ Scheduled weekly digest for every Monday at 08:00');
+    } catch (e) {
+      developer.log('❌ Error scheduling weekly digest: $e');
     }
   }
 

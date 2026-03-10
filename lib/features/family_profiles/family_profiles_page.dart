@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'family_repository.dart';
+import 'family_color_repository.dart';
 import 'models/family_member_model.dart';
 import 'edit_family_member_page.dart';
 
@@ -12,6 +13,7 @@ class FamilyProfilesPage extends StatefulWidget {
 
 class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
   final FamilyRepository repo = FamilyRepository();
+  final FamilyColorRepository colorRepo = FamilyColorRepository();
   bool _loading = true;
 
   @override
@@ -22,6 +24,7 @@ class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
 
   Future<void> _initializeData() async {
     await repo.init();
+    await colorRepo.init();
     setState(() => _loading = false);
   }
 
@@ -116,6 +119,21 @@ class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.palette_rounded, color: Color(0xFF8B5CF6), size: 20),
+              ),
+              title: const Text('Choose Color'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickColor(member);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
                   color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -142,6 +160,53 @@ class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
       MaterialPageRoute(builder: (_) => EditFamilyMemberPage(member: member)),
     );
     if (mounted) setState(() {});
+  }
+
+  Future<void> _pickColor(FamilyMember member) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Color for ${member.name}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: FamilyColorRepository.palette.map((color) {
+                final isCurrent = colorRepo.getColor(member.id).value == color.value;
+                return GestureDetector(
+                  onTap: () async {
+                    await colorRepo.setColor(member.id, color);
+                    if (mounted) setState(() {});
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isCurrent ? Border.all(color: Colors.white, width: 3) : null,
+                      boxShadow: isCurrent ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)] : null,
+                    ),
+                    child: isCurrent ? const Icon(Icons.check_rounded, color: Colors.white, size: 20) : null,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _addNewMember() async {
@@ -227,6 +292,7 @@ class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: _FamilyMemberCard(
                               member: member,
+                              color: colorRepo.getColor(member.id),
                               onTap: () => _editMember(member),
                               onOptions: () => _showMemberOptions(member),
                             ),
@@ -300,11 +366,13 @@ class _FamilyProfilesPageState extends State<FamilyProfilesPage> {
 
 class _FamilyMemberCard extends StatelessWidget {
   final FamilyMember member;
+  final Color color;
   final VoidCallback onTap;
   final VoidCallback onOptions;
 
   const _FamilyMemberCard({
     required this.member,
+    required this.color,
     required this.onTap,
     required this.onOptions,
   });
@@ -322,19 +390,19 @@ class _FamilyMemberCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: color.withOpacity(0.25), width: 1.5),
           ),
           child: Row(
             children: [
-              // Avatar
+              // Avatar with member color
               Container(
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: _getAvatarColor(member.name),
+                  color: color,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.person, color: Colors.white, size: 32),
+                child: const Icon(Icons.person, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
 
@@ -427,16 +495,6 @@ class _FamilyMemberCard extends StatelessWidget {
     );
   }
 
-  Color _getAvatarColor(String name) {
-    final colors = [
-      const Color(0xFF2563EB),
-      const Color(0xFFEC4899),
-      const Color(0xFF8B5CF6),
-      const Color(0xFF10B981),
-      const Color(0xFFF59E0B),
-    ];
-    return colors[name.hashCode % colors.length];
-  }
 }
 
 class _SummaryChip extends StatelessWidget {

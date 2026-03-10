@@ -9,9 +9,9 @@ import 'package:http/http.dart' as http;
 
 import 'models.dart';
 
-/// Inlined secure storage helper (previously `gemini_key_store.dart`).
-class GeminiKeyStore {
-  static const String _storageKey = 'GEMINI_API_KEY';
+/// Inlined secure storage helper.
+class AIKeyStore {
+  static const String _storageKey = 'OPENROUTER_API_KEY';
   static final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   static Future<void> saveKey(String key) async {
@@ -32,31 +32,37 @@ class GeminiKeyStore {
   }
 }
 
+// Keep old name as alias so other files still compile.
+typedef GeminiKeyStore = AIKeyStore;
+
 class AIService {
-  static const String _envKey = String.fromEnvironment('GEMINI_API_KEY');
+  static const String _envKey = String.fromEnvironment('OPENROUTER_API_KEY');
   static const String _envProxy = String.fromEnvironment('AI_PROXY_URL');
+
+  static const String _openRouterUrl =
+      'https://openrouter.ai/api/v1/chat/completions';
+  static const String _openRouterModel = 'openai/gpt-oss-120b:free';
+
   final String? apiKey;
   final String? _proxyUrl;
-  GenerativeModel? _model;
+
+  // Gemini model is kept as an optional fallback only when no OpenRouter key.
+  GenerativeModel? _geminiModel;
 
   AIService({String? apiKey})
-    : apiKey = apiKey ?? (_envKey.isEmpty ? null : _envKey),
-      _proxyUrl = _envProxy.isEmpty ? null : _envProxy;
+      : apiKey = apiKey ?? (_envKey.isEmpty ? null : _envKey),
+        _proxyUrl = _envProxy.isEmpty ? null : _envProxy;
 
-  /// Synchronous indicator whether an API key was passed in constructor
-  /// or provided at build time via `--dart-define`.
   bool get hasApiKey => apiKey != null && apiKey!.isNotEmpty;
 
-  /// Returns true if any API key is available (env, constructor, or secure store).
   static Future<bool> hasAnyApiKey() async {
     if (_envKey.isNotEmpty) return true;
-    final stored = await GeminiKeyStore.getKey();
+    final stored = await AIKeyStore.getKey();
     return stored != null && stored.isNotEmpty;
   }
 
   Future<String> ask(String question, {AICategory? category}) async {
-    // If a proxy URL is set, send the request to the proxy instead of
-    // using the native GenerativeModel. This keeps secrets on the server.
+    // 1. Prefer proxy if configured.
     if (_proxyUrl != null) {
       final uri = Uri.parse('$_proxyUrl/ask');
       final body = jsonEncode({
@@ -81,24 +87,27 @@ class AIService {
       }
     }
 
-    await _ensureModel();
-    // If no API key, signal caller to fallback
-    if (_model == null) {
-      throw StateError('NO_API_K');
+    // 2. Use OpenRouter (primary).
+    final openRouterKey = await _resolveKey();
+    if (openRouterKey != null) {
+      return _callOpenRouter(
+        systemPrompt: _systemPrompt(category),
+        userMessage: question,
+        apiKey: openRouterKey,
+      );
     }
 
+    // 3. Fallback to Gemini if an old Gemini key exists.
+    await _ensureGeminiModel();
+    if (_geminiModel == null) throw StateError('NO_API_K');
     final sys = _systemPrompt(category);
     final content = [Content.system(sys), Content.text(question)];
-
     try {
-      final resp = await _model!.generateContent(content);
+      final resp = await _geminiModel!.generateContent(content);
       final text = resp.text?.trim();
-      if (text == null || text.isEmpty) {
-        throw StateError('EMPTY_RESPONSE');
-      }
+      if (text == null || text.isEmpty) throw StateError('EMPTY_RESPONSE');
       return text;
     } on GenerativeAIException catch (e) {
-      // Bubble a structured error so UI can fallback offline
       throw StateError('API_ERROR:${e.message}');
     } catch (e) {
       throw StateError('UNKNOWN_ERROR:$e');
@@ -141,8 +150,8 @@ class AIService {
       }
     }
 
-    await _ensureModel();
-    if (_model == null) {
+    await _ensureGeminiModel();
+    if (_geminiModel == null) {
       throw StateError('NO_API_K');
     }
 
@@ -163,7 +172,7 @@ class AIService {
     parts.add(Content.data(type, imageBytes));
 
     try {
-      final resp = await _model!.generateContent(parts);
+      final resp = await _geminiModel!.generateContent(parts);
       final text = resp.text?.trim();
       if (text == null || text.isEmpty) {
         throw StateError('EMPTY_RESPONSE');
@@ -176,28 +185,67 @@ class AIService {
     }
   }
 
-  /// Ensure `_model` is initialized. Preference order: constructor/apiKey ->
-  /// build-time env (`--dart-define`) -> secure storage (set in app settings).
-  Future<void> _ensureModel() async {
-    if (_model != null) return;
-    // If a proxy URL was provided at build/run time, prefer using proxy.
-    if (_proxyUrl != null) return;
+  /// Call the OpenRouter chat completions endpoint.
+  Future<String> _callOpenRouter({
+    required String systemPrompt,
+    required String userMessage,
+    required String apiKey,
+  }) async {
+    final uri = Uri.parse(_openRouterUrl);
+    final body = jsonEncode({
+      'model': _openRouterModel,
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': userMessage},
+      ],
+    });
+    try {
+      final res = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      );
+      if (res.statusCode != 200) {
+        throw StateError('API_ERROR:${res.statusCode} ${res.body}');
+      }
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final text =
+          (data['choices']?[0]?['message']?['content'] as String?)?.trim();
+      if (text == null || text.isEmpty) throw StateError('EMPTY_RESPONSE');
+      return text;
+    } catch (e) {
+      throw StateError('UNKNOWN_ERROR:$e');
+    }
+  }
 
-    String? keyToUse = apiKey;
-    if (keyToUse == null || keyToUse.isEmpty) {
-      if (_envKey.isNotEmpty) keyToUse = _envKey;
-    }
-    if (keyToUse == null || keyToUse.isEmpty) {
-      keyToUse = await GeminiKeyStore.getKey();
-    }
-    if (keyToUse != null && keyToUse.isNotEmpty) {
-      _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: keyToUse);
+  /// Resolve the OpenRouter key: constructor arg → dart-define → secure storage.
+  Future<String?> _resolveKey() async {
+    if (apiKey != null && apiKey!.isNotEmpty) return apiKey;
+    if (_envKey.isNotEmpty) return _envKey;
+    return AIKeyStore.getKey();
+  }
+
+  /// Ensure Gemini model is initialized (fallback only).
+  Future<void> _ensureGeminiModel() async {
+    if (_geminiModel != null) return;
+    if (_proxyUrl != null) return;
+    // Only try Gemini if there is no OpenRouter key.
+    final orKey = await _resolveKey();
+    if (orKey != null && orKey.isNotEmpty) return;
+    // Attempt to load a legacy Gemini key stored under the old storage key.
+    const legacyStorage = FlutterSecureStorage();
+    final geminiKey = await legacyStorage.read(key: 'GEMINI_API_KEY');
+    if (geminiKey != null && geminiKey.isNotEmpty) {
+      _geminiModel = GenerativeModel(model: 'gemini-1.5-flash', apiKey: geminiKey);
     }
   }
 
   /// Persist an API key into secure storage so it can be used later.
   static Future<void> setApiKey(String key) async {
-    await GeminiKeyStore.saveKey(key);
+    await AIKeyStore.saveKey(key);
   }
 
   String _systemPrompt(AICategory? category) {
@@ -237,7 +285,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
   }
 
   Future<void> _load() async {
-    final key = await GeminiKeyStore.getKey();
+    final key = await AIKeyStore.getKey();
     if (!mounted) return;
     _controller.text = key ?? '';
     setState(() {});
@@ -247,16 +295,16 @@ class _AISettingsPageState extends State<AISettingsPage> {
     final val = _controller.text.trim();
     setState(() => _saving = true);
     if (val.isEmpty) {
-      await GeminiKeyStore.deleteKey();
+      await AIKeyStore.deleteKey();
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Gemini API key cleared')));
+      ).showSnackBar(const SnackBar(content: Text('API key cleared')));
     } else {
-      await GeminiKeyStore.saveKey(val);
+      await AIKeyStore.saveKey(val);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gemini API key saved securely')),
+        const SnackBar(content: Text('API key saved securely')),
       );
     }
     if (!mounted) return;
@@ -264,12 +312,12 @@ class _AISettingsPageState extends State<AISettingsPage> {
   }
 
   Future<void> _clear() async {
-    await GeminiKeyStore.deleteKey();
+    await AIKeyStore.deleteKey();
     _controller.clear();
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Gemini API key removed')));
+    ).showSnackBar(const SnackBar(content: Text('API key removed')));
     setState(() {});
   }
 
@@ -291,7 +339,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
               controller: _controller,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Paste your Deepseek / OpenAI-style API key here',
+                hintText: 'Paste your OpenRouter API key (sk-or-v1-...)',
               ),
               autocorrect: false,
               enableSuggestions: false,
