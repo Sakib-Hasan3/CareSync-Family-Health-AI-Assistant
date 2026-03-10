@@ -1,11 +1,10 @@
-<<<<<<< HEAD
 # 🏥 CareSync - Family Health Management App
 
 CareSync is a comprehensive Flutter application designed to help families manage their health effectively. Track medications, schedule appointments, monitor family members' health, and access emergency services - all in one place.
 
 ## ✨ Key Features
 
-### 👨‍👩‍👧‍👦 Family Health Management
+### 👨‍👩‍👧‍👦 Family H
 - **Family Profiles**: Create and manage health profiles for all family members
 - **Health Timeline**: Visual timeline of all health events, appointments, and medications
 - **Medical Records**: Store and organize medical documents securely
@@ -402,4 +401,3 @@ CareSync is a health management tool and does not provide medical advice. Always
 
 **Built with ❤️ using Flutter**
 
->>>>>>> 708022920982b0a6f5b0024c4b12d82baa6f60ef
