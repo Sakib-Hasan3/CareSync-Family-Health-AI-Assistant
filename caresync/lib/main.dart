@@ -17,7 +17,6 @@ import 'features/admin/medications_admin.dart';
 import 'features/admin/health_guides_admin.dart';
 import 'features/blood/donor_search_page.dart';
 import 'package:caresync/features/medical_records/medical_records_page.dart';
-import 'package:caresync/features/appointments/appointment_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
 import 'package:caresync/shared/services/notification_service.dart';
 
@@ -78,3 +77,4 @@ class CareSyncApp extends StatelessWidget {
     );
   }
 }
+
