@@ -410,6 +410,27 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _googleIcon() {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            color: Color(0xFF4285F4),
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSocialLogin() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -418,14 +439,10 @@ class _LoginPageState extends State<LoginPage> {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: _loading ? null : _signInWithGoogle,
-            icon: Image.network(
-              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-              height: 20,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.g_mobiledata_rounded, size: 24),
-            ),
+            icon: _googleIcon(),
             label: const Text('Google'),
             style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
               foregroundColor: Colors.grey.shade700,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(

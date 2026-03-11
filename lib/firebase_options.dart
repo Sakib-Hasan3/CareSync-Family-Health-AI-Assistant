@@ -41,11 +41,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAKF3XsAmBfrBqkZCLr1FahniFPbMvMJPM',
-    appId: '1:329281196829:android:9bfd9e6624ae817c6007f4',
-    messagingSenderId: '329281196829',
-    projectId: 'caresyncm',
-    storageBucket: 'caresyncm.firebasestorage.app',
+    apiKey: 'AIzaSyBs5x9rBsrcZmPEvQWrj7zEKjd2D9W2XSY',
+    appId: '1:623777701983:android:786f4ef929288067f37bea',
+    messagingSenderId: '623777701983',
+    projectId: 'caresync-app-955fa',
+    storageBucket: 'caresync-app-955fa.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
