@@ -118,21 +118,21 @@ class _DashboardPageState extends State<DashboardPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final maxHeight = MediaQuery.of(context).size.height * 0.72;
-        return SafeArea(
-          child: Container(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
               ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 12),
                   Container(
@@ -153,11 +153,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Constrain the grid so it cannot grow beyond the available sheet height
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: maxHeight - 140),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -384,11 +383,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -572,39 +570,23 @@ class _DashboardHomeState extends State<DashboardHome> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Section
               _buildHeader(user, greeting),
-              const SizedBox(height: 24),
-
-              // Emergency Quick Access
-              _buildEmergencyQuickAccess(),
-              const SizedBox(height: 16),
-
-              // SOS Panic Button
-              _buildSosPanicCard(),
-              const SizedBox(height: 24),
-
-              // Emergency Contacts Quick Access
-              _buildEmergencyContactsCard(),
-              const SizedBox(height: 24),
-
-              // Alarm Settings Quick Access
-              _buildAlarmSettingsCard(),
-              const SizedBox(height: 24),
-
-              // Health Overview Cards
+              const SizedBox(height: 20),
               _buildHealthOverview(),
-              const SizedBox(height: 24),
-
-              // Quick Stats Row
+              const SizedBox(height: 16),
               _buildQuickStats(),
               const SizedBox(height: 24),
-
-              // Reports & Timeline quick access
-              _buildReportsTimelineSection(),
+              const Text(
+                'All Features',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildAllFeaturesGrid(),
               const SizedBox(height: 24),
-
-              // Today's Medications
               if (_todayMedications.isNotEmpty) ...[
                 _buildSectionHeader('Today\'s Medications', 'View All', () {
                   Navigator.push(
@@ -617,7 +599,6 @@ class _DashboardHomeState extends State<DashboardHome> {
                 const SizedBox(height: 24),
               ],
 
-              // Family Members
               _buildSectionHeader('Family Members', 'Manage', () {
                 Navigator.push(
                   context,
@@ -626,92 +607,178 @@ class _DashboardHomeState extends State<DashboardHome> {
               }),
               const SizedBox(height: 12),
               _buildFamilyMembers(),
-              const SizedBox(height: 16),
-              // Visible Blood donation card (register donor quick access)
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DonorRegistrationPage(),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 8,
-                        color: Colors.black.withOpacity(0.04),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Iconsax.profile_add,
-                          color: Color(0xFF10B981),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Blood Donation',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Register as a donor or request blood quickly',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const DonorRegistrationPage(),
-                            ),
-                          );
-                        },
-                        child: const Text('Register'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
               const SizedBox(height: 24),
-
-              // Health Tips with AI
               _buildAITips(),
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAllFeaturesGrid() {
+    final features = <Map<String, dynamic>>[
+      {
+        'icon': Iconsax.warning_2,
+        'label': 'Emergency\nProfile',
+        'color': const Color(0xFFFF6B6B),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyProfilePage())),
+      },
+      {
+        'icon': Icons.sos_rounded,
+        'label': 'SOS Panic',
+        'color': const Color(0xFFDC143C),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SosPanicPage())),
+      },
+      {
+        'icon': Icons.emergency_rounded,
+        'label': 'Emergency\nHelplines',
+        'color': const Color(0xFFE53935),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyContactsPage())),
+      },
+      {
+        'icon': Iconsax.health,
+        'label': 'Medications',
+        'color': const Color(0xFF10B981),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicationsPage())),
+      },
+      {
+        'icon': Iconsax.profile_add,
+        'label': 'Family\nProfiles',
+        'color': const Color(0xFF8B5CF6),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyProfilesPage())),
+      },
+      {
+        'icon': Iconsax.cpu,
+        'label': 'AI Assistant',
+        'color': const Color(0xFF06B6D4),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIAssistantPage())),
+      },
+      {
+        'icon': Iconsax.blood_drop,
+        'label': 'Blood\nRequests',
+        'color': const Color(0xFFEF4444),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BloodHomePage())),
+      },
+      {
+        'icon': Icons.volunteer_activism_rounded,
+        'label': 'Register\nDonor',
+        'color': const Color(0xFF10B981),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DonorRegistrationPage())),
+      },
+      {
+        'icon': Iconsax.search_normal,
+        'label': 'Find\nDonors',
+        'color': const Color(0xFFDC2626),
+        'onTap': () => Navigator.pushNamed(context, '/donor-search'),
+      },
+      {
+        'icon': Iconsax.activity,
+        'label': 'Health\nTimeline',
+        'color': const Color(0xFF2563EB),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthTimelinePage())),
+      },
+      {
+        'icon': Iconsax.document,
+        'label': 'Monthly\nReport',
+        'color': const Color(0xFF1D4ED8),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MonthlyReportPage())),
+      },
+      {
+        'icon': Icons.vaccines_rounded,
+        'label': 'Vaccination',
+        'color': const Color(0xFF059669),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaccinationTrackerPage())),
+      },
+      {
+        'icon': Icons.document_scanner_rounded,
+        'label': 'Rx Scanner',
+        'color': const Color(0xFF0891B2),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrescriptionScannerPage())),
+      },
+      {
+        'icon': Iconsax.document_add,
+        'label': 'Health\nRecords',
+        'color': const Color(0xFF3B82F6),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthRecordsPage())),
+      },
+      {
+        'icon': Icons.monitor_heart_rounded,
+        'label': 'Symptom\nTracker',
+        'color': const Color(0xFFEC4899),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SymptomTrackerPage())),
+      },
+      {
+        'icon': Icons.alarm_rounded,
+        'label': 'Alarm\nSettings',
+        'color': const Color(0xFFF59E0B),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlarmSettingsPage())),
+      },
+      {
+        'icon': Icons.admin_panel_settings_rounded,
+        'label': 'Admin\nPanel',
+        'color': const Color(0xFF7C3AED),
+        'onTap': () => Navigator.pushNamed(context, '/admin'),
+      },
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.95,
+      ),
+      itemCount: features.length,
+      itemBuilder: (context, index) {
+        final f = features[index];
+        final color = f['color'] as Color;
+        return GestureDetector(
+          onTap: f['onTap'] as VoidCallback,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 8,
+                  color: Colors.black.withOpacity(0.05),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(f['icon'] as IconData, color: color, size: 24),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    f['label'] as String,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
