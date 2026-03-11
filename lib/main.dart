@@ -11,15 +11,9 @@ import 'auth/email_verification_page.dart';
 import 'auth/otp_verification_page.dart';
 import 'dashboard/dashboard_page.dart';
 import 'features/directory/browse_and_book.dart';
-import 'features/directory/admin_page.dart';
-import 'features/admin/admin_dashboard.dart';
-import 'features/admin/medical_info_admin.dart';
-import 'features/admin/medications_admin.dart';
-import 'features/admin/health_guides_admin.dart';
 import 'features/blood/donor_search_page.dart';
 import 'package:caresync/features/medical_records/medical_records_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
-import 'package:caresync/features/prescription_scanner/prescription_scanner_page.dart';
 import 'package:caresync/features/vaccination/vaccination_tracker_page.dart';
 import 'package:caresync/features/sos/sos_panic_page.dart';
 import 'package:caresync/shared/services/notification_service.dart';
@@ -332,15 +326,9 @@ class _CareSyncAppState extends State<CareSyncApp> {
         '/verify-email': (_) => const EmailVerificationPage(),
         '/dashboard': (_) => const DashboardPage(),
         '/directory/browse': (_) => const BrowseAndBookPage(),
-        '/directory/admin': (_) => const DirectoryAdminPage(),
         '/medical-records': (_) => const MedicalRecordsPage(),
         '/alarm-settings': (_) => const AlarmSettingsPage(),
-        '/admin': (_) => const AdminDashboard(),
-        '/admin/medical-info': (_) => const MedicalInfoAdminPage(),
-        '/admin/medications': (_) => const MedicationsAdminPage(),
-        '/admin/health-guides': (_) => const HealthGuidesAdminPage(),
         '/donor-search': (_) => const DonorSearchPage(),
-        '/prescription-scanner': (_) => const PrescriptionScannerPage(),
         '/vaccination-tracker': (_) => const VaccinationTrackerPage(),
         '/sos': (_) => const SosPanicPage(),
         '/settings': (_) => const SettingsPage(),

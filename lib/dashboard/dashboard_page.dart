@@ -20,7 +20,6 @@ import 'package:caresync/features/health_timeline/ui/health_timeline_page.dart';
 import 'package:caresync/features/reports/ui/monthly_report_page.dart';
 import 'package:caresync/features/emergency_contacts/ui/emergency_contacts_page.dart';
 import 'package:caresync/features/alarms/alarm_settings_page.dart';
-import 'package:caresync/features/prescription_scanner/prescription_scanner_page.dart';
 import 'package:caresync/features/vaccination/vaccination_tracker_page.dart';
 import 'package:caresync/features/sos/sos_panic_page.dart';
 import 'package:caresync/features/user_profile/user_profile_repository.dart';
@@ -208,20 +207,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                           ),
                           _QuickActionGridItem(
-                            icon: Iconsax.activity,
-                            label: 'Track Symptoms',
-                            color: const Color(0xFFEC4899),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SymptomTrackerPage(),
-                                ),
-                              );
-                            },
-                          ),
-                          _QuickActionGridItem(
                             icon: Iconsax.cpu,
                             label: 'AI Assistant',
                             color: const Color(0xFF06B6D4),
@@ -315,20 +300,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                           ),
                           _QuickActionGridItem(
-                            icon: Icons.document_scanner_rounded,
-                            label: 'Rx Scanner',
-                            color: const Color(0xFF0891B2),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const PrescriptionScannerPage(),
-                                ),
-                              );
-                            },
-                          ),
-                          _QuickActionGridItem(
                             icon: Icons.vaccines_rounded,
                             label: 'Vaccination',
                             color: const Color(0xFF10B981),
@@ -368,15 +339,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                   builder: (_) => const AlarmSettingsPage(),
                                 ),
                               );
-                            },
-                          ),
-                          _QuickActionGridItem(
-                            icon: Icons.admin_panel_settings,
-                            label: 'Admin Panel',
-                            color: const Color(0xFF7C3AED),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamed(context, '/admin');
                             },
                           ),
                         ],
@@ -481,7 +443,6 @@ class _DashboardHomeState extends State<DashboardHome> {
         'familyMembers': members.length,
         'activeMeds': meds.length,
         'medicalRecords': 0,
-        'symptomsTracked': 0,
       };
       _loading = false;
     });
@@ -692,34 +653,16 @@ class _DashboardHomeState extends State<DashboardHome> {
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaccinationTrackerPage())),
       },
       {
-        'icon': Icons.document_scanner_rounded,
-        'label': 'Rx Scanner',
-        'color': const Color(0xFF0891B2),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrescriptionScannerPage())),
-      },
-      {
         'icon': Iconsax.document_add,
         'label': 'Health\nRecords',
         'color': const Color(0xFF3B82F6),
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthRecordsPage())),
       },
       {
-        'icon': Icons.monitor_heart_rounded,
-        'label': 'Symptom\nTracker',
-        'color': const Color(0xFFEC4899),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SymptomTrackerPage())),
-      },
-      {
         'icon': Icons.alarm_rounded,
         'label': 'Alarm\nSettings',
         'color': const Color(0xFFF59E0B),
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlarmSettingsPage())),
-      },
-      {
-        'icon': Icons.admin_panel_settings_rounded,
-        'label': 'Admin\nPanel',
-        'color': const Color(0xFF7C3AED),
-        'onTap': () => Navigator.pushNamed(context, '/admin'),
       },
     ];
 
@@ -1199,15 +1142,6 @@ class _DashboardHomeState extends State<DashboardHome> {
                 '${_todayMedications.where((med) => med['taken'] == true).length}/${_todayMedications.length}',
             label: 'Meds Taken',
             color: const Color(0xFF10B981),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickStatCard(
-            icon: Iconsax.activity,
-            value: _healthStats['symptomsTracked'].toString(),
-            label: 'Symptoms Tracked',
-            color: const Color(0xFFF59E0B),
           ),
         ),
       ],
@@ -2480,18 +2414,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class SymptomTrackerPage extends StatelessWidget {
-  const SymptomTrackerPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Symptom Tracker')),
-      body: const Center(child: Text('Symptom Tracker Page')),
     );
   }
 }

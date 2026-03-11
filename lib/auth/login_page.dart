@@ -38,9 +38,9 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString();
-        
+
         // Check if it's email verification error
-        if (errorMessage.contains('verify your email') || 
+        if (errorMessage.contains('verify your email') ||
             errorMessage.contains('verification link')) {
           _showVerificationDialog();
         } else {
@@ -104,12 +104,12 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
       );
-      
+
       await _authService.resendVerificationEmail();
-      
+
       // Sign out after sending
       await FirebaseAuth.instance.signOut();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -181,10 +181,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     }

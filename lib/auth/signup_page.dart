@@ -46,9 +46,10 @@ class _SignupPageState extends State<SignupPage> {
 
     setState(() => _loading = true);
     try {
-      final displayName = '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
+      final displayName =
+          '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
       final email = _emailCtrl.text.trim();
-      
+
       await _authService.signUpWithEmail(
         email: email,
         password: _passCtrl.text,
@@ -60,7 +61,9 @@ class _SignupPageState extends State<SignupPage> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account created! Please check your email for verification link.'),
+          content: Text(
+            'Account created! Please check your email for verification link.',
+          ),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 4),
@@ -106,10 +109,7 @@ class _SignupPageState extends State<SignupPage> {
               ],
             ),
             content: SingleChildScrollView(
-              child: Text(
-                e.toString(),
-                style: const TextStyle(fontSize: 14),
-              ),
+              child: Text(e.toString(), style: const TextStyle(fontSize: 14)),
             ),
             actions: [
               TextButton(
