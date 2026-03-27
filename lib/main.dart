@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 import 'auth/home_page.dart';
 import 'auth/login_page.dart';
-import 'auth/signup_page.dart';
-import 'auth/email_verification_page.dart';
-import 'auth/otp_verification_page.dart';
 import 'dashboard/dashboard_page.dart';
 import 'features/directory/browse_and_book.dart';
 import 'features/blood/donor_search_page.dart';
@@ -53,11 +51,81 @@ class CareSyncApp extends StatefulWidget {
 
 class _CareSyncAppState extends State<CareSyncApp> {
   final _settings = AppSettings();
+  late Future<String> _initialRouteFuture;
 
   @override
   void initState() {
     super.initState();
     _settings.addListener(_onSettingsChanged);
+    _initialRouteFuture = _determineInitialRoute();
+  }
+
+  Future<String> _determineInitialRoute() async {
+    // Check if onboarding is done
+    if (!_settings.onboardingDone) {
+      return '/onboarding';
+    }
+
+    // Check if user is logged in via SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      if (isLoggedIn) {
+        return '/dashboard';
+      }
+    } catch (e) {
+      debugPrint('Error checking login status: $e');
+    }
+
+    // Default to home page (login page)
+    return '/';
+  }
+
+  Widget _buildInitialRoute() {
+    return FutureBuilder<String>(
+      future: _initialRouteFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          // Show splash screen while determining initial route
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.local_hospital_rounded,
+                    size: 80,
+                    color: Color(0xFF6C63FF),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'CareSync',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  const CircularProgressIndicator(),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final initialRoute = snapshot.data ?? '/';
+
+        // Build different route structures based on initial route
+        if (initialRoute == '/dashboard') {
+          return const DashboardPage();
+        } else if (initialRoute == '/onboarding') {
+          return const OnboardingPage();
+        } else {
+          return const HomePage();
+        }
+      },
+    );
   }
 
   @override
@@ -71,284 +139,278 @@ class _CareSyncAppState extends State<CareSyncApp> {
   @override
   Widget build(BuildContext context) {
     return MediaQuery(
-      data: MediaQueryData(
-        textScaler: TextScaler.linear(_settings.fontScale),
-      ),
+      data: MediaQueryData(textScaler: TextScaler.linear(_settings.fontScale)),
       child: MaterialApp(
-      title: 'CareSync',
-      debugShowCheckedModeBanner: false,
-      themeMode: _settings.themeMode,
-      darkTheme: _buildDarkTheme(),
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-          primary: const Color(0xFF2563EB),
-          secondary: const Color(0xFF10B981),
-          error: const Color(0xFFEF4444),
-          surface: Colors.white,
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        // ── AppBar ──────────────────────────────────────────────────────
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          centerTitle: true,
-          backgroundColor: Color(0xFF2563EB),
-          foregroundColor: Colors.white,
-          titleTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: -0.3,
+        title: 'CareSync',
+        debugShowCheckedModeBanner: false,
+        themeMode: _settings.themeMode,
+        darkTheme: _buildDarkTheme(),
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2563EB),
+            primary: const Color(0xFF2563EB),
+            secondary: const Color(0xFF10B981),
+            error: const Color(0xFFEF4444),
+            surface: Colors.white,
+            brightness: Brightness.light,
           ),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        // ── Cards ────────────────────────────────────────────────────────
-        cardTheme: CardThemeData(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-          color: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          margin: EdgeInsets.zero,
-        ),
-        // ── Input fields ──────────────────────────────────────────────────
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Color(0xFFF8FAFC),
-          labelStyle: TextStyle(
-            color: Color(0xFF64748B),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-          hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-          prefixIconColor: Color(0xFF64748B),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Color(0xFF2563EB), width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Color(0xFFEF4444)),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Color(0xFFEF4444), width: 2),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
-        // ── Buttons ────────────────────────────────────────────────────────
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
+          scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+          // ── AppBar ──────────────────────────────────────────────────────
+          appBarTheme: const AppBarTheme(
             elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
             backgroundColor: Color(0xFF2563EB),
             foregroundColor: Colors.white,
-            disabledBackgroundColor: Color(0xFFCBD5E1),
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            minimumSize: Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+            titleTextStyle: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.3,
             ),
-            textStyle: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
+            iconTheme: IconThemeData(color: Colors.white),
           ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Color(0xFF2563EB),
-            side: BorderSide(color: Color(0xFF2563EB), width: 1.5),
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            minimumSize: Size(double.infinity, 54),
+          // ── Cards ────────────────────────────────────────────────────────
+          cardTheme: CardThemeData(
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderRadius: BorderRadius.all(Radius.circular(16)),
             ),
-            textStyle: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
+            color: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            margin: EdgeInsets.zero,
           ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: Color(0xFF2563EB),
-            textStyle: TextStyle(
+          // ── Input fields ──────────────────────────────────────────────────
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Color(0xFFF8FAFC),
+            labelStyle: TextStyle(
+              color: Color(0xFF64748B),
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
+            ),
+            hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+            prefixIconColor: Color(0xFF64748B),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFF2563EB), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFFEF4444)),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFFEF4444), width: 2),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          // ── Buttons ────────────────────────────────────────────────────────
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              backgroundColor: Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Color(0xFFCBD5E1),
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              minimumSize: Size(double.infinity, 54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(14)),
+              ),
+              textStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
-        ),
-        // ── SnackBar ─────────────────────────────────────────────────────
-        snackBarTheme: SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-          contentTextStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        // ── Dialogs ──────────────────────────────────────────────────────
-        dialogTheme: DialogThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-          ),
-          elevation: 8,
-          surfaceTintColor: Colors.white,
-        ),
-        // ── Bottom Sheet ──────────────────────────────────────────────────
-        bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Color(0xFF2563EB),
+              side: BorderSide(color: Color(0xFF2563EB), width: 1.5),
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              minimumSize: Size(double.infinity, 54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(14)),
+              ),
+              textStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
-          surfaceTintColor: Colors.transparent,
-          elevation: 8,
-        ),
-        // ── Navigation Bar ────────────────────────────────────────────────
-        navigationBarTheme: NavigationBarThemeData(
-          elevation: 0,
-          height: 70,
-          backgroundColor: Colors.white,
-          indicatorColor: Color(0xFF2563EB).withOpacity(0.12),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: Color(0xFF2563EB),
+              textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+          // ── SnackBar ─────────────────────────────────────────────────────
+          snackBarTheme: SnackBarThemeData(
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            contentTextStyle: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          // ── Dialogs ──────────────────────────────────────────────────────
+          dialogTheme: DialogThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
+            elevation: 8,
+            surfaceTintColor: Colors.white,
+          ),
+          // ── Bottom Sheet ──────────────────────────────────────────────────
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            surfaceTintColor: Colors.transparent,
+            elevation: 8,
+          ),
+          // ── Navigation Bar ────────────────────────────────────────────────
+          navigationBarTheme: NavigationBarThemeData(
+            elevation: 0,
+            height: 70,
+            backgroundColor: Colors.white,
+            indicatorColor: Color(0xFF2563EB).withOpacity(0.12),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2563EB),
+                );
+              }
               return const TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2563EB),
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
               );
-            }
-            return const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
-            );
-          }),
-          iconTheme: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: Color(0xFF2563EB), size: 24);
-            }
-            return const IconThemeData(color: Color(0xFF94A3B8), size: 22);
-          }),
-        ),
-        // ── Chip ──────────────────────────────────────────────────────────
-        chipTheme: ChipThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+            }),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(color: Color(0xFF2563EB), size: 24);
+              }
+              return const IconThemeData(color: Color(0xFF94A3B8), size: 22);
+            }),
           ),
-          side: BorderSide.none,
-        ),
-        // ── Divider ──────────────────────────────────────────────────────
-        dividerTheme: const DividerThemeData(
-          color: Color(0xFFF1F5F9),
-          thickness: 1,
-          space: 0,
-        ),
-        // ── Typography ─────────────────────────────────────────────────────
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A),
-            letterSpacing: -0.5,
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
-            letterSpacing: -0.3,
-          ),
-          titleLarge: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E293B),
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF334155),
-            height: 1.6,
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF475569),
-            height: 1.5,
-          ),
-          bodySmall: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF64748B),
-          ),
-          labelLarge: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2563EB),
-          ),
-        ),
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
-      ),
-      initialRoute: _settings.onboardingDone ? '/' : '/onboarding',
-      routes: {
-        '/': (_) => const HomePage(),
-        '/login': (_) => const LoginPage(),
-        '/signup': (_) => const SignupPage(),
-        '/verify-email': (_) => const EmailVerificationPage(),
-        '/dashboard': (_) => const DashboardPage(),
-        '/directory/browse': (_) => const BrowseAndBookPage(),
-        '/medical-records': (_) => const MedicalRecordsPage(),
-        '/alarm-settings': (_) => const AlarmSettingsPage(),
-        '/donor-search': (_) => const DonorSearchPage(),
-        '/vaccination-tracker': (_) => const VaccinationTrackerPage(),
-        '/sos': (_) => const SosPanicPage(),
-        '/settings': (_) => const SettingsPage(),
-        '/pin-lock': (_) => const PinLockScreen(),
-        '/onboarding': (_) => const OnboardingPage(),
-        '/doctor-share': (_) => const DoctorSharePage(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == '/otp-verification') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => OTPVerificationPage(
-              email: args['email'] as String,
-              isSignup: args['isSignup'] as bool? ?? false,
+          // ── Chip ──────────────────────────────────────────────────────────
+          chipTheme: ChipThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
-          );
-        }
-        return null;
-      },
-    ));
+            side: BorderSide.none,
+          ),
+          // ── Divider ──────────────────────────────────────────────────────
+          dividerTheme: const DividerThemeData(
+            color: Color(0xFFF1F5F9),
+            thickness: 1,
+            space: 0,
+          ),
+          // ── Typography ─────────────────────────────────────────────────────
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.5,
+            ),
+            headlineMedium: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.3,
+            ),
+            titleLarge: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
+            ),
+            titleMedium: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+            bodyLarge: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF334155),
+              height: 1.6,
+            ),
+            bodyMedium: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF475569),
+              height: 1.5,
+            ),
+            bodySmall: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF64748B),
+            ),
+            labelLarge: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            },
+          ),
+        ),
+        initialRoute: '/',
+        routes: {
+          '/': (_) => _buildInitialRoute(),
+          '/login': (_) => const LoginPage(),
+          '/dashboard': (_) => const DashboardPage(),
+          '/directory/browse': (_) => const BrowseAndBookPage(),
+          '/medical-records': (_) => const MedicalRecordsPage(),
+          '/alarm-settings': (_) => const AlarmSettingsPage(),
+          '/donor-search': (_) => const DonorSearchPage(),
+          '/vaccination-tracker': (_) => const VaccinationTrackerPage(),
+          '/sos': (_) => const SosPanicPage(),
+          '/settings': (_) => const SettingsPage(),
+          '/pin-lock': (_) => const PinLockScreen(),
+          '/onboarding': (_) => const OnboardingPage(),
+          '/doctor-share': (_) => const DoctorSharePage(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/otp-verification') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => OtpVerifyPage(
+                phone: args['phone'] as String,
+                referenceNo: args['referenceNo'] as String,
+              ),
+            );
+          }
+          return null;
+        },
+      ),
+    );
   }
 
   ThemeData _buildDarkTheme() {

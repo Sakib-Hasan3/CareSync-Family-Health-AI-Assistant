@@ -1,6 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+
+const String _baseUrl = "https://www.flicksize.com/caresync/";
+
+bool _isSupportedRobiAirtelNumber(String phone) {
+  return RegExp(r'^01(?:6|8)\d{8}$').hasMatch(phone);
+}
+
+// Retry with exponential backoff
+Future<http.Response> _makeRequestWithRetry(
+  Future<http.Response> Function() request, {
+  int maxRetries = 3,
+  Duration initialDelay = const Duration(seconds: 1),
+}) async {
+  int attempts = 0;
+  Duration delay = initialDelay;
+  dynamic lastError;
+
+  while (attempts < maxRetries) {
+    try {
+      debugPrint('🔄 Request attempt ${attempts + 1}/$maxRetries');
+      final response = await request().timeout(const Duration(seconds: 25));
+      debugPrint('✅ Request succeeded on attempt ${attempts + 1}');
+      return response;
+    } catch (e) {
+      lastError = e;
+      attempts++;
+      final errorType = _getErrorType(e);
+      debugPrint('❌ Request failed (attempt $attempts): [$errorType] $e');
+
+      if (attempts >= maxRetries) {
+        debugPrint('⛔ Max retries ($maxRetries) reached. Error: $e');
+        rethrow;
+      }
+
+      // Wait before retrying with exponential backoff
+      debugPrint('⏳ Waiting ${delay.inSeconds}s before retry...');
+      await Future.delayed(delay);
+      delay *= 2; // Double the delay for next retry
+    }
+  }
+
+  throw Exception('Request failed after $maxRetries retries: $lastError');
+}
+
+String _getErrorType(dynamic error) {
+  final errorStr = error.toString().toLowerCase();
+  if (errorStr.contains('timeout')) return 'TIMEOUT';
+  if (errorStr.contains('connection')) return 'CONNECTION_ERROR';
+  if (errorStr.contains('dns')) return 'DNS_ERROR';
+  if (errorStr.contains('certificate')) return 'SSL_CERTIFICATE_ERROR';
+  if (errorStr.contains('refused')) return 'CONNECTION_REFUSED';
+  if (errorStr.contains('network')) return 'NETWORK_ERROR';
+  return 'UNKNOWN_ERROR';
+}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,181 +66,240 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _authService = AuthService();
-  final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
-  bool _loading = false;
-  bool _obscureText = true;
-  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = false;
 
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _loading = true);
+  Future<bool> _checkAlreadySubscribed(String phone) async {
     try {
-      await _authService.signInWithEmail(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      );
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } catch (e) {
-      if (mounted) {
-        final errorMessage = e.toString();
+      debugPrint('Checking subscription for: $phone');
 
-        // Check if it's email verification error
-        if (errorMessage.contains('verify your email') ||
-            errorMessage.contains('verification link')) {
-          _showVerificationDialog();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        }
+      final response = await _makeRequestWithRetry(
+        () => http.post(
+          Uri.parse('${_baseUrl}check_subscription.php'),
+          body: {'user_mobile': phone},
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        ),
+        maxRetries: 2,
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('Subscription check failed: ${response.statusCode}');
+        debugPrint('Response: ${response.body}');
+        return false;
       }
-    } finally {
-      if (mounted) setState(() => _loading = false);
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is! Map<String, dynamic>) {
+        debugPrint('Invalid subscription response format');
+        return false;
+      }
+
+      final status =
+          decoded['subscriptionStatus']?.toString().trim().toUpperCase() ?? '';
+      final isSubscribed = status == 'REGISTERED';
+
+      debugPrint('Subscription status: $status, isSubscribed: $isSubscribed');
+      return isSubscribed;
+    } catch (e) {
+      debugPrint('Subscription check error: $e');
+      return false;
     }
   }
 
-  void _showVerificationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.email_outlined, color: Color(0xFFF59E0B)),
-            SizedBox(width: 12),
-            Text('Email Not Verified'),
-          ],
-        ),
-        content: const Text(
-          'Please verify your email address before logging in.\n\n'
-          'Check your inbox for the verification link. '
-          'If you didn\'t receive it, you can request a new one.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  Future<void> _onContinue() async {
+    final phone = _phoneController.text.trim();
+
+    if (phone.isEmpty) {
+      _showError('Please enter a mobile number');
+      return;
+    }
+    if (!_isSupportedRobiAirtelNumber(phone)) {
+      _showError('Please enter a valid Robi/Airtel number (016/018)');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Check if already subscribed
+      final isSubscribed = await _checkAlreadySubscribed(phone);
+
+      if (isSubscribed) {
+        _showSuccess('Welcome! Logging in...');
+        await Future.delayed(const Duration(milliseconds: 800));
+
+        try {
+          await _saveAndGoHome(phone);
+        } catch (e) {
+          if (mounted) {
+            _showError('Login failed. Please try again.');
+            setState(() => _isLoading = false);
+          }
+        }
+        return;
+      }
+
+      // Send OTP request with retry logic
+      _showSuccess('Sending OTP...');
+
+      try {
+        final otpResponse = await _makeRequestWithRetry(
+          () => http.post(
+            Uri.parse('${_baseUrl}send_otp.php'),
+            body: {'user_mobile': phone},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _resendVerificationEmail();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
+          maxRetries: 3,
+          initialDelay: const Duration(seconds: 2),
+        );
+
+        debugPrint('OTP Response Status: ${otpResponse.statusCode}');
+        debugPrint('OTP Response Body: ${otpResponse.body}');
+
+        if (otpResponse.statusCode != 200) {
+          _showError('Server connection failed. Please try again later.');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        dynamic otpData;
+        try {
+          otpData = jsonDecode(otpResponse.body);
+        } catch (e) {
+          debugPrint('JSON Parse Error: $e');
+          _showError('Invalid response from server');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        if (otpData is! Map<String, dynamic>) {
+          _showError('Unexpected server response');
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        final success = otpData['success'] == true;
+        final referenceNo = otpData['referenceNo']?.toString().trim() ?? '';
+        final message = otpData['message']?.toString() ?? '';
+        final statusDetail = otpData['statusDetail']?.toString() ?? '';
+        final statusCode = otpData['statusCode']?.toString().trim() ?? '';
+
+        debugPrint(
+          'Success: $success, RefNo: $referenceNo, StatusCode: $statusCode',
+        );
+
+        if (success && referenceNo.isNotEmpty) {
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  OtpVerifyPage(phone: phone, referenceNo: referenceNo),
             ),
-            child: const Text('Resend Link'),
-          ),
-        ],
+          );
+        } else if (statusCode == 'E1351' ||
+            message.toLowerCase().contains('already registered')) {
+          _showSuccess('Already registered! Logging in...');
+          await Future.delayed(const Duration(milliseconds: 800));
+
+          try {
+            await _saveAndGoHome(phone);
+          } catch (e) {
+            if (mounted) {
+              _showError('Login failed. Please try again later.');
+              setState(() => _isLoading = false);
+            }
+          }
+        } else {
+          final errorMsg = message.isNotEmpty
+              ? message
+              : (statusDetail.isNotEmpty
+                    ? statusDetail
+                    : 'Failed to send OTP. Please check your internet connection.');
+          debugPrint('Error: $errorMsg');
+          _showError(errorMsg);
+          setState(() => _isLoading = false);
+        }
+      } catch (e) {
+        debugPrint('❌ OTP send exception: $e');
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+
+        final errorMsg = _getDetailedErrorMessage(e);
+        _showError(errorMsg);
+      }
+    } catch (e) {
+      debugPrint('❌ Exception: $e');
+      final errorMsg = _getDetailedErrorMessage(e);
+      _showError(errorMsg);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveAndGoHome(String phone) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userPhone', phone);
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
       ),
     );
   }
 
-  Future<void> _resendVerificationEmail() async {
-    try {
-      // Sign in temporarily to send verification
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      );
-
-      await _authService.resendVerificationEmail();
-
-      // Sign out after sending
-      await FirebaseAuth.instance.signOut();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification link sent! Check your email.'),
-            backgroundColor: Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to resend: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() => _loading = true);
-    try {
-      final credential = await _authService.signInWithGoogle();
-      if (credential != null && mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
   }
 
-  Future<void> _forgotPassword() async {
-    if (_emailCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email first'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
+  // Error messages
+  String _getDetailedErrorMessage(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+
+    debugPrint('🔍 Error analysis: $error');
+
+    if (errorStr.contains('timeout')) {
+      return 'Server is not responding. Please check your internet connection and try again.';
+    }
+    if (errorStr.contains('connection refused')) {
+      return 'Server connection refused. The server might be offline.';
+    }
+    if (errorStr.contains('dns') || errorStr.contains('host')) {
+      return 'Server not found. Domain name may be incorrect or network issue exists.';
+    }
+    if (errorStr.contains('certificate') || errorStr.contains('ssl')) {
+      return 'Server security certificate issue. Please check your device date/time.';
+    }
+    if (errorStr.contains('network')) {
+      return 'No network connection. Please check your internet.';
+    }
+    if (errorStr.contains('refused') || errorStr.contains('connect')) {
+      return 'Cannot connect to server. Please check if the server is online.';
     }
 
-    try {
-      await _authService.sendPasswordResetEmail(_emailCtrl.text.trim());
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset email sent! Check your inbox.'),
-            backgroundColor: Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-        );
-      }
-    }
+    return 'Server error occurred. Please try again later.';
   }
 
   @override
@@ -192,307 +307,603 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back Button
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_rounded),
-                padding: EdgeInsets.zero,
-                alignment: Alignment.centerLeft,
-              ),
-              const SizedBox(height: 20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header with Logo/Icon
+                Center(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
 
-              // Header Section
-              _buildHeaderSection(),
-              const SizedBox(height: 40),
+                // Welcome Text
+                Text(
+                  'Welcome',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your family health care in one app',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
 
-              // Login Form
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Email Field
-                    _buildEmailField(),
-                    const SizedBox(height: 20),
+                // Phone Number Input
+                Text(
+                  'Mobile Number',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  enabled: !_isLoading,
+                  style: const TextStyle(fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: '+8801812345678',
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    prefixIcon: Container(
+                      padding: const EdgeInsets.all(12),
+                      child: Icon(
+                        Icons.phone_android_rounded,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade300,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF2563EB),
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-                    // Password Field
-                    _buildPasswordField(),
-                    const SizedBox(height: 12),
-
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _forgotPassword,
+                // Supported Networks Info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2563EB).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: const Color(0xFF2563EB),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
                         child: Text(
-                          'Forgot Password?',
+                          'Use Robi/Airtel number with 016 or 018 prefix',
                           style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            color: Colors.grey.shade700,
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Continue Button
+                _isLoading
+                    ? Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : FilledButton(
+                        onPressed: _onContinue,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: const Color(0xFF2563EB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Text(
+                          'Next',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                const SizedBox(height: 24),
+
+                // Footer / Terms
+                Center(
+                  child: Text(
+                    'By using the app, you agree to our terms and privacy policy',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OtpVerifyPage extends StatefulWidget {
+  final String phone;
+  final String referenceNo;
+
+  const OtpVerifyPage({
+    super.key,
+    required this.phone,
+    required this.referenceNo,
+  });
+
+  @override
+  State<OtpVerifyPage> createState() => _OtpVerifyPageState();
+}
+
+class _OtpVerifyPageState extends State<OtpVerifyPage> {
+  final TextEditingController _otpController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _verifyOtp() async {
+    final otp = _otpController.text.trim();
+    if (otp.isEmpty || otp.length < 4) {
+      _showError('Please enter a valid OTP (4-6 digits)');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _makeRequestWithRetry(
+        () => http.post(
+          Uri.parse('${_baseUrl}verify_otp.php'),
+          body: {
+            'Otp': otp,
+            'referenceNo': widget.referenceNo,
+            'user_mobile': widget.phone,
+          },
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        ),
+        maxRetries: 2,
+      );
+
+      debugPrint('OTP Verify Response Status: ${response.statusCode}');
+      debugPrint('OTP Verify Response: ${response.body}');
+
+      if (response.statusCode != 200) {
+        _showError('Server connection failed');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      dynamic data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (e) {
+        debugPrint('JSON Parse Error: $e');
+        _showError('সার্ভার থেকে ভুল তথ্য এসেছে');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      if (data is! Map<String, dynamic>) {
+        _showError('অপ্রত্যাশিত সার্ভার প্রতিক্রিয়া');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final statusCode =
+          data['statusCode']?.toString().trim().toUpperCase() ?? '';
+
+      debugPrint('OTP Status Code: $statusCode');
+
+      if (statusCode == 'S1000') {
+        // OTP verified successfully - save credentials immediately
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userPhone', widget.phone);
+
+        // Wait briefly for subscription sync, then continue to login.
+        final subscribed = await _waitForSubscriptionSync();
+
+        if (!mounted) return;
+        if (!subscribed) {
+          _showWarning(
+            'Subscription is processing. Please login after a moment.',
+          );
+          await Future.delayed(const Duration(seconds: 1));
+          if (!mounted) return;
+        }
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+          (route) => false,
+        );
+      } else {
+        final message = data['message']?.toString() ?? 'Invalid OTP';
+        debugPrint('OTP Error Message: $message');
+        _showError(message);
+      }
+    } catch (e) {
+      debugPrint('❌ OTP Exception: $e');
+      // Use the same detailed error message function
+      final errorMsg = (e.toString().toLowerCase().contains('timeout'))
+          ? 'OTP যাচাইতে সময় লেগেছে। ফিরে যান এবং পুনরায় চেষ্টা করুন।'
+          : (e.toString().toLowerCase().contains('connection'))
+          ? 'সার্ভারে সংযোগ করতে পারছি না। ইন্টারনেট চেক করুন।'
+          : 'সার্ভার সমস্যা হয়েছে। ফিরে যান এবং পুনরায় চেষ্টা করুন।';
+      _showError(errorMsg);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Wait for subscription to sync - reduced to 5 checks for faster UX
+  Future<bool> _waitForSubscriptionSync() async {
+    for (var i = 0; i < 5; i++) {
+      await Future.delayed(const Duration(seconds: 1));
+
+      try {
+        debugPrint('Subscription sync check ${i + 1}/5');
+        final response = await _makeRequestWithRetry(
+          () => http.post(
+            Uri.parse('${_baseUrl}check_subscription.php'),
+            body: {'user_mobile': widget.phone},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          ),
+          maxRetries: 1,
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data is Map<String, dynamic>) {
+            final status =
+                data['subscriptionStatus']?.toString().trim().toUpperCase() ??
+                '';
+            debugPrint('Subscription sync status: $status');
+            // Only accept REGISTERED (means charging succeeded)
+            if (status == 'REGISTERED') {
+              return true;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Subscription sync check error: $e');
+        // Continue checking
+      }
+    }
+
+    return false;
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showWarning(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text('Verify OTP'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 20),
+
+                // Header Icon
+                Center(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-
-                    // Login Button
-                    _buildLoginButton(),
-                    const SizedBox(height: 30),
-
-                    // Divider
-                    _buildOrDivider(),
-                    const SizedBox(height: 30),
-
-                    // Social Login Options
-                    _buildSocialLogin(),
-                    const SizedBox(height: 40),
-
-                    // Sign Up Link
-                    _buildSignUpLink(),
-                  ],
+                    child: const Icon(
+                      Icons.mark_email_read_outlined,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                const SizedBox(height: 32),
 
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Welcome Back
-        const Text(
-          'Welcome Back',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Subtitle
-        Text(
-          'Sign in to access your family health dashboard',
-          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailCtrl,
-      keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        labelText: 'Email Address',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your email';
-        }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Please enter a valid email';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passCtrl,
-      obscureText: _obscureText,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock_outline),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscureText
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: Colors.grey.shade600,
-          ),
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your password';
-        }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _loading ? null : _login,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2563EB),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-        ),
-        child: _loading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                // Title
+                Text(
+                  'Enter OTP',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              )
-            : const Text(
-                'Sign In',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-      ),
-    );
-  }
+                const SizedBox(height: 8),
 
-  Widget _buildOrDivider() {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Colors.grey.shade300)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Or continue with',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-          ),
-        ),
-        Expanded(child: Divider(color: Colors.grey.shade300)),
-      ],
-    );
-  }
+                // Phone Number
+                Text(
+                  widget.phone,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 4),
 
-  Widget _googleIcon() {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: const Center(
-        child: Text(
-          'G',
-          style: TextStyle(
-            color: Color(0xFF4285F4),
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
-  }
+                // Message
+                Text(
+                  'An OTP code has been sent to ${widget.phone}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 32),
 
-  Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Google Login
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _loading ? null : _signInWithGoogle,
-            icon: _googleIcon(),
-            label: const Text('Google'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.grey.shade700,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              side: BorderSide(color: Colors.grey.shade300),
+                // OTP Input
+                Text(
+                  'OTP Code',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _otpController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  enabled: !_isLoading,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: '000000',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade300,
+                      fontSize: 32,
+                      letterSpacing: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade300,
+                        width: 2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF10B981),
+                        width: 2.5,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Verify Button
+                _isLoading
+                    ? Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : FilledButton(
+                        onPressed: _verifyOtp,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: const Color(0xFF10B981),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Text(
+                          'Verify',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                const SizedBox(height: 16),
+
+                // Back Button
+                TextButton.icon(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back, size: 18),
+                  label: const Text('Wrong number?'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Reference Info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Reference No: ${widget.referenceNo}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 16),
-
-        // Apple Login (disabled for now)
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.apple, size: 20),
-            label: const Text('Apple'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey.shade400,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSignUpLink() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Don't have an account?",
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
-        const SizedBox(width: 4),
-        TextButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/signup');
-          },
-          child: const Text(
-            'Sign Up',
-            style: TextStyle(
-              color: Color(0xFF2563EB),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

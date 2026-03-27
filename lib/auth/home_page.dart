@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,6 +12,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _authService = AuthService();
   bool _googleLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if user is logged in, redirect to login if not
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      if (!isLoggedIn && mounted) {
+        // Redirect to BDApps login
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    });
+  }
 
   Future<void> _signInWithGoogle() async {
     setState(() => _googleLoading = true);
@@ -138,7 +153,10 @@ class _HomePageState extends State<HomePage> {
                 spacing: 10,
                 runSpacing: 10,
                 children: const [
-                  _HeroPill(icon: Icons.medication_rounded, label: 'Smart Meds'),
+                  _HeroPill(
+                    icon: Icons.medication_rounded,
+                    label: 'Smart Meds',
+                  ),
                   _HeroPill(icon: Icons.family_restroom, label: 'Family Care'),
                   _HeroPill(icon: Icons.sos_rounded, label: 'SOS Alert'),
                   _HeroPill(icon: Icons.vaccines_rounded, label: 'Vaccines'),
@@ -193,10 +211,26 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildFeatureGrid() {
     final features = [
-      (Icons.medication_rounded, 'Medication\nTracker', const Color(0xFF2563EB)),
-      (Icons.folder_special_rounded, 'Health\nRecords', const Color(0xFF10B981)),
-      (Icons.family_restroom_rounded, 'Family\nProfiles', const Color(0xFF8B5CF6)),
-      (Icons.warning_amber_rounded, 'Emergency\nProfile', const Color(0xFFEF4444)),
+      (
+        Icons.medication_rounded,
+        'Medication\nTracker',
+        const Color(0xFF2563EB),
+      ),
+      (
+        Icons.folder_special_rounded,
+        'Health\nRecords',
+        const Color(0xFF10B981),
+      ),
+      (
+        Icons.family_restroom_rounded,
+        'Family\nProfiles',
+        const Color(0xFF8B5CF6),
+      ),
+      (
+        Icons.warning_amber_rounded,
+        'Emergency\nProfile',
+        const Color(0xFFEF4444),
+      ),
       (Icons.bloodtype_rounded, 'Blood\nDonation', const Color(0xFFDC2626)),
       (Icons.smart_toy_rounded, 'AI\nAssistant', const Color(0xFF0891B2)),
     ];
@@ -261,7 +295,8 @@ class _HomePageState extends State<HomePage> {
             name: 'Sarah M.',
             role: 'Mother of 3',
             rating: 5,
-            comment: "CareSync saved me so much time managing my family's medications. The SOS feature is a lifesaver!",
+            comment:
+                "CareSync saved me so much time managing my family's medications. The SOS feature is a lifesaver!",
             avatarColor: Color(0xFF2563EB),
           ),
           SizedBox(width: 14),
@@ -269,7 +304,8 @@ class _HomePageState extends State<HomePage> {
             name: 'Dr. Raj Patel',
             role: 'Family Physician',
             rating: 5,
-            comment: 'I recommend CareSync to all my patients. Emergency profiles provide critical info when it matters most.',
+            comment:
+                'I recommend CareSync to all my patients. Emergency profiles provide critical info when it matters most.',
             avatarColor: Color(0xFF10B981),
           ),
           SizedBox(width: 14),
@@ -277,7 +313,8 @@ class _HomePageState extends State<HomePage> {
             name: 'The Johnson Family',
             role: 'Users for 2 years',
             rating: 5,
-            comment: "From elderly parents to kids' vaccinations, CareSync keeps our whole family organized and healthy.",
+            comment:
+                "From elderly parents to kids' vaccinations, CareSync keeps our whole family organized and healthy.",
             avatarColor: Color(0xFF8B5CF6),
           ),
         ],
@@ -310,8 +347,7 @@ class _HomePageState extends State<HomePage> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation(Color(0xFF4285F4)),
+                      valueColor: AlwaysStoppedAnimation(Color(0xFF4285F4)),
                     ),
                   )
                 : Row(
@@ -495,7 +531,9 @@ class _TestimonialCard extends StatelessWidget {
               (i) => Icon(
                 Icons.star_rounded,
                 size: 14,
-                color: i < rating ? const Color(0xFFFBBF24) : const Color(0xFFE2E8F0),
+                color: i < rating
+                    ? const Color(0xFFFBBF24)
+                    : const Color(0xFFE2E8F0),
               ),
             ),
           ),
@@ -534,7 +572,10 @@ class _TestimonialCard extends StatelessWidget {
                   ),
                   Text(
                     role,
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                    ),
                   ),
                 ],
               ),

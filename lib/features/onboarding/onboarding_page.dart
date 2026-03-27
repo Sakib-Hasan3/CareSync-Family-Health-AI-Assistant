@@ -64,7 +64,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Future<void> _finish() async {
     await AppSettings().setOnboardingDone();
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -210,7 +210,11 @@ class _OnboardingCard extends StatelessWidget {
                   color: Colors.white.withOpacity(0.18),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(step.icon, size: size.width * 0.18, color: Colors.white),
+                child: Icon(
+                  step.icon,
+                  size: size.width * 0.18,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 40),
               Text(

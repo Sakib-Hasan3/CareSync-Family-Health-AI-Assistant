@@ -308,7 +308,8 @@ class _DashboardPageState extends State<DashboardPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const VaccinationTrackerPage(),
+                                  builder: (_) =>
+                                      const VaccinationTrackerPage(),
                                 ),
                               );
                             },
@@ -584,49 +585,73 @@ class _DashboardHomeState extends State<DashboardHome> {
         'icon': Iconsax.warning_2,
         'label': 'Emergency\nProfile',
         'color': const Color(0xFFFF6B6B),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyProfilePage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EmergencyProfilePage()),
+        ),
       },
       {
         'icon': Icons.sos_rounded,
         'label': 'SOS Panic',
         'color': const Color(0xFFDC143C),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SosPanicPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SosPanicPage()),
+        ),
       },
       {
         'icon': Icons.emergency_rounded,
         'label': 'Emergency\nHelplines',
         'color': const Color(0xFFE53935),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyContactsPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EmergencyContactsPage()),
+        ),
       },
       {
         'icon': Iconsax.health,
         'label': 'Medications',
         'color': const Color(0xFF10B981),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicationsPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MedicationsPage()),
+        ),
       },
       {
         'icon': Iconsax.profile_add,
         'label': 'Family\nProfiles',
         'color': const Color(0xFF8B5CF6),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyProfilesPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FamilyProfilesPage()),
+        ),
       },
       {
         'icon': Iconsax.cpu,
         'label': 'AI Assistant',
         'color': const Color(0xFF06B6D4),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIAssistantPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AIAssistantPage()),
+        ),
       },
       {
         'icon': Iconsax.blood_drop,
         'label': 'Blood\nRequests',
         'color': const Color(0xFFEF4444),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BloodHomePage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BloodHomePage()),
+        ),
       },
       {
         'icon': Icons.volunteer_activism_rounded,
         'label': 'Register\nDonor',
         'color': const Color(0xFF10B981),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DonorRegistrationPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DonorRegistrationPage()),
+        ),
       },
       {
         'icon': Iconsax.search_normal,
@@ -638,31 +663,46 @@ class _DashboardHomeState extends State<DashboardHome> {
         'icon': Iconsax.activity,
         'label': 'Health\nTimeline',
         'color': const Color(0xFF2563EB),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthTimelinePage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const HealthTimelinePage()),
+        ),
       },
       {
         'icon': Iconsax.document,
         'label': 'Monthly\nReport',
         'color': const Color(0xFF1D4ED8),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MonthlyReportPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MonthlyReportPage()),
+        ),
       },
       {
         'icon': Icons.vaccines_rounded,
         'label': 'Vaccination',
         'color': const Color(0xFF059669),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaccinationTrackerPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VaccinationTrackerPage()),
+        ),
       },
       {
         'icon': Iconsax.document_add,
         'label': 'Health\nRecords',
         'color': const Color(0xFF3B82F6),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthRecordsPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const HealthRecordsPage()),
+        ),
       },
       {
         'icon': Icons.alarm_rounded,
         'label': 'Alarm\nSettings',
         'color': const Color(0xFFF59E0B),
-        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlarmSettingsPage())),
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AlarmSettingsPage()),
+        ),
       },
     ];
 
@@ -686,10 +726,7 @@ class _DashboardHomeState extends State<DashboardHome> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  blurRadius: 8,
-                  color: Colors.black.withOpacity(0.05),
-                ),
+                BoxShadow(blurRadius: 8, color: Colors.black.withOpacity(0.05)),
               ],
             ),
             child: Column(
@@ -799,264 +836,6 @@ class _DashboardHomeState extends State<DashboardHome> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildEmergencyQuickAccess() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const EmergencyProfilePage()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A5A)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(blurRadius: 12, color: Colors.red.withOpacity(0.3)),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Icon(Iconsax.warning_2, color: Colors.white, size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Emergency Profile',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Access critical medical info offline',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Iconsax.arrow_right_3, color: Colors.white, size: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSosPanicCard() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SosPanicPage()),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFDC143C), Color(0xFFB71C1C)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(blurRadius: 14, color: Color(0xFFDC143C), spreadRadius: -2),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.sos_rounded, color: Colors.white, size: 36),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'SOS Panic Button',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Send live location & alert to emergency contacts',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmergencyContactsCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const EmergencyContactsPage()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFDC143C), Color(0xFFFF6B6B)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(blurRadius: 12, color: Colors.red.withOpacity(0.3)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.emergency_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Emergency Helplines',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ambulance, hospitals, police & more',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.phone_enabled,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlarmSettingsCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AlarmSettingsPage()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(blurRadius: 12, color: Colors.purple.withOpacity(0.3)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.alarm, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Medication Alarms',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Manage all your health reminders',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_active,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1312,138 +1091,6 @@ class _DashboardHomeState extends State<DashboardHome> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildReportsTimelineSection() {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HealthTimelinePage()),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withOpacity(0.04),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Iconsax.activity,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Health Timeline',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'View your appointments, meds, labs and events',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Iconsax.arrow_right_3, color: Color(0xFF6B7280)),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MonthlyReportPage()),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withOpacity(0.04),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Iconsax.document,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Monthly Report',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Generate and download your monthly health summary',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Iconsax.arrow_right_3, color: Color(0xFF6B7280)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
