@@ -15,6 +15,25 @@ if ($user_mobile === '') {
     exit;
 }
 
+// TEST MODE: For testing without real subscription
+define('TEST_MODE', true);
+define('TEST_NUMBERS', ['01869793139', '01812345678']);
+
+$digits = preg_replace('/\D+/', '', $user_mobile);
+
+if (TEST_MODE && in_array($digits, TEST_NUMBERS)) {
+    // Return not subscribed for first test (allows OTP flow testing)
+    echo json_encode([
+        'subscriptionStatus' => 'UNREGISTERED',
+        'isSubscribed' => false,
+        'statusCode' => 'E1951',
+        'statusDetail' => 'Test mode: User not subscribed yet',
+        'version' => '1.0',
+        'isTestMode' => true,
+    ]);
+    exit;
+}
+
 $subscriberId = 'tel:88' . $user_mobile;
 
 $requestData = [

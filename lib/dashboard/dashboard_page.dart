@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Use local Iconsax stub to avoid external dependency
 import 'package:caresync/features/health_timeline/iconsax_stub.dart';
+import 'package:caresync/auth/unsubscription_service.dart';
 
 // Feature pages
 import 'package:caresync/features/family_profiles/family_profiles_page.dart';
@@ -486,9 +488,54 @@ class _DashboardHomeState extends State<DashboardHome> {
     );
 
     if (confirm == true && mounted) {
-      await FirebaseAuth.instance.signOut();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        // Get user phone number from preferences
+        final prefs = await SharedPreferences.getInstance();
+        final userPhone = prefs.getString('userPhone') ?? '';
+
+        // Call unsubscription service (non-blocking)
+        if (userPhone.isNotEmpty) {
+          await UnsubscriptionService.unsubscribeUser(userPhone);
+        }
+
+        // Clear all stored preferences
+        await prefs.clear();
+
+        // Sign out from Firebase (if still needed)
+        try {
+          await FirebaseAuth.instance.signOut();
+        } catch (e) {
+          debugPrint('Firebase signout error: $e');
+          // Continue logout regardless
+        }
+
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        debugPrint('Logout error: $e');
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logout failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -1577,9 +1624,54 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true && mounted) {
-      await FirebaseAuth.instance.signOut();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        // Get user phone number from preferences
+        final prefs = await SharedPreferences.getInstance();
+        final userPhone = prefs.getString('userPhone') ?? '';
+
+        // Call unsubscription service (non-blocking)
+        if (userPhone.isNotEmpty) {
+          await UnsubscriptionService.unsubscribeUser(userPhone);
+        }
+
+        // Clear all stored preferences
+        await prefs.clear();
+
+        // Sign out from Firebase (if still needed)
+        try {
+          await FirebaseAuth.instance.signOut();
+        } catch (e) {
+          debugPrint('Firebase signout error: $e');
+          // Continue logout regardless
+        }
+
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        debugPrint('Logout error: $e');
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Logout failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

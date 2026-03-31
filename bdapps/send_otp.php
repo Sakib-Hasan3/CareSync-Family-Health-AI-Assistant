@@ -32,7 +32,31 @@ if (!preg_match('/^01[3-9][0-9]{8}$/', $digits)) {
 // bdapps subscriberId format
 $user_mobile = 'tel:88' . $digits;
 
-// Debug log
+// TEST MODE: For development/testing - return test OTP
+// Set TEST_MODE to false in production
+define('TEST_MODE', true);
+define('TEST_NUMBERS', ['01869793139', '01812345678']); // Add test numbers here
+
+if (TEST_MODE && in_array($digits, TEST_NUMBERS)) {
+    $testRefNo = 'TEST_' . time() . '_' . rand(10000, 99999);
+    $testOtp = '123456'; // Fixed test OTP code for testing
+    
+    // Log test OTP for reference
+    file_put_contents('TEST_OTP_LOG.txt', "Phone: $digits | OTP: $testOtp | RefNo: $testRefNo | Time: " . date('Y-m-d H:i:s') . PHP_EOL, FILE_APPEND);
+    
+    echo json_encode([
+        'success' => true,
+        'referenceNo' => $testRefNo,
+        'statusCode' => 'S1000',
+        'statusDetail' => 'Test Mode: OTP sent successfully',
+        'version' => '1.0',
+        'testOtp' => $testOtp,
+        'isTestMode' => true
+    ]);
+    exit;
+}
+
+// Production mode: Log the request
 file_put_contents('user_number.txt', $user_mobile . PHP_EOL, FILE_APPEND);
 
 // Request data

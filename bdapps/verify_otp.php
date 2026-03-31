@@ -13,6 +13,7 @@ $date_ = date("Y-m-d h:i:sa");
 
 $user_otp = isset($_POST['Otp']) ? $_POST['Otp'] : '';
 $referenceNo = isset($_POST['referenceNo']) ? $_POST['referenceNo'] : '';
+$user_mobile = isset($_POST['user_mobile']) ? $_POST['user_mobile'] : '';
 
 if (empty($user_otp) || empty($referenceNo)) {
     echo json_encode(array('statusCode' => 'FAILED', 'message' => 'Missing OTP or referenceNo'));
@@ -24,6 +25,25 @@ try {
     fwrite($myfile, "OTP:" . $user_otp . " RefNo:" . $referenceNo . " Date" . $date_ . "\n");
     fclose($myfile);
 } catch (Exception $e) {
+}
+
+// TEST MODE: Verify test OTP
+define('TEST_MODE', true);
+define('TEST_NUMBERS', ['01869793139', '01812345678']);
+
+// Extract phone from referenceNo or use user_mobile
+$digits = preg_replace('/\D+/', '', $user_mobile);
+
+if (TEST_MODE && in_array($digits, TEST_NUMBERS) && strpos($referenceNo, 'TEST_') === 0 && $user_otp === '123456') {
+    // Accept test OTP for test reference numbers
+    echo json_encode(array(
+        'statusCode' => 'S1000',
+        'subscriptionStatus' => 'ACTIVE',
+        'subscriberId' => 'tel:88' . $digits,
+        'isTestMode' => true,
+        'message' => 'Test OTP verified successfully'
+    ));
+    exit;
 }
 
 $requestData = array(
